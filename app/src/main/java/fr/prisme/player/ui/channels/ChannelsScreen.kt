@@ -72,6 +72,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -1235,6 +1236,13 @@ private fun TopBar(
             .onFocusChanged { onFocusChanged(it.hasFocus) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_prism_mark),
+            contentDescription = null,
+            modifier = Modifier.size(34.dp),
+            tint = Color.Unspecified,
+        )
+        Spacer(Modifier.width(12.dp))
         Text(
             text = stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineSmall.copy(
@@ -1243,7 +1251,7 @@ private fun TopBar(
                 letterSpacing = 2.sp,
             ),
         )
-        Spacer(Modifier.width(24.dp))
+        Spacer(Modifier.width(26.dp))
         Tabs.forEach { tab ->
             val isSelected = tab.type == selected
             TabPill(

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compact, transparent Prism mark shared by splash screens and in-app headers. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FF9DBBFF"
+        android:pathData="M24,18 L24,90 L49,54 Z" />
+    <path
+        android:fillColor="#FFF4F7FF"
+        android:pathData="M24,18 L90,54 L49,54 Z" />
+    <path
+        android:fillColor="#FF4D86FF"
+        android:pathData="M24,90 L90,54 L49,54 Z" />
+</vector>
