@@ -19,7 +19,7 @@
     .group { width:100%; text-align:left; border:0; background:transparent; padding:13px 15px; border-radius:11px; color:var(--muted); display:flex; justify-content:space-between; cursor:pointer; }
     .group.active { background:rgba(75,163,255,.13); color:var(--ink); }
     .group:focus-visible,.channel:focus-visible,.icon:focus-visible,.top-action:focus-visible,.program:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
-    .group:focus-visible,.channel:focus-visible { box-shadow:inset 4px 0 0 var(--blue); }
+    .group:focus-visible,.channel:focus-visible { background:rgba(255,255,255,.16); }
     .rail-foot { margin-top:auto; color:var(--muted); font-size:13px; line-height:1.45; }
     main { padding:34px 48px 48px; min-width:0; }
     .topbar { display:flex; gap:15px; align-items:center; justify-content:space-between; margin-bottom:30px; }
@@ -40,7 +40,7 @@
     .channel-list { padding:8px; }
     .channel { border:0; width:100%; border-radius:12px; padding:12px; background:transparent; display:grid; grid-template-columns:52px 42px 1fr auto; gap:13px; align-items:center; text-align:left; cursor:pointer; }
     .channel:hover,.channel.selected { background:var(--panel-2); }
-    .channel.selected { box-shadow:inset 4px 0 0 var(--blue); }
+    .channel.selected { outline:1px solid rgba(244,246,247,.32); outline-offset:-1px; }
     .logo { width:44px; height:44px; border-radius:10px; display:grid; place-items:center; background:rgba(255,255,255,.16); color:var(--ink); font-size:12px; font-weight:800; }
     .num { color:var(--muted); font-variant-numeric:tabular-nums; }
     .channel-name { font-weight:650; }
