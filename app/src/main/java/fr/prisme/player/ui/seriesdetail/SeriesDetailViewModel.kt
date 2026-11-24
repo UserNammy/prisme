@@ -148,7 +148,7 @@ class SeriesDetailViewModel : ViewModel() {
 
             val config = app.settings.sourceConfig.first() as? SourceConfig.Xtream
             if (config == null) {
-                _state.update { it.copy(loading = false, error = "Aucune source Xtream.") }
+                _state.update { it.copy(loading = false, error = "Aucune source Xtream n’est configurée.") }
                 return@launch
             }
 
