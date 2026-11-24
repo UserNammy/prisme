@@ -132,10 +132,17 @@ package au milieu d’une autre fonctionnalité : faire ce chantier séparément
 
 ## Vérification / compilation
 
-La machine ayant servi aux derniers commits n’a pas de SDK Android configuré.
-Les vérifications effectuées étaient `git diff --check` et la validation XML.
-Il ne faut pas affirmer que l’APK a compilé tant que cette commande n’a pas
-réussi sur une machine Android correctement configurée :
+Validation effectuée le 24 novembre 2026 avec JDK 17 et le SDK Android API 34 :
+
+- `test` réussit pour les variantes debug et release ;
+- `assembleDebug` génère l’APK debug avec succès.
+
+Les tests sur une vraie TV Android et un téléphone restent à réaliser avec une
+source appartenant à l’utilisateur. Le checkout principal est placé dans
+OneDrive : la synchronisation peut verrouiller `app/build` et provoquer une
+erreur Gradle du type « Unable to delete directory ». Dans ce cas, faire la
+vérification dans un worktree temporaire hors d’un dossier synchronisé plutôt
+que de supprimer des fichiers source.
 
 ```powershell
 .\gradlew.bat test --no-daemon --console=plain
