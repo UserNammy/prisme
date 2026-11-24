@@ -78,7 +78,7 @@ device with API 29 or higher.
 
 | | |
 |---|---|
-| Device | Android TV 10+ (API 29), D-pad remote |
+| Device | Android TV or Android phone 10+ (API 29) |
 | JDK to build | 17 or 21 (AGP 8.5.2 does not support JDK 25) |
 | An IPTV source | An M3U URL **or** Xtream Codes credentials |
 | TMDB token | Optional — only for posters & metadata |
@@ -86,12 +86,23 @@ device with API 29 or higher.
 ## Building
 
 Copy `local.properties.example` to `local.properties` and point `sdk.dir` at
-your Android SDK (the file is git-ignored, so secrets stay local). Then:
+your Android SDK (the file is git-ignored, so secrets stay local). Then, on
+macOS:
 
 ```sh
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ./gradlew assembleDebug
 # APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+On Linux, set `JAVA_HOME` to a JDK 17 or 21 installation before running
+`./gradlew assembleDebug`.
+
+On Windows PowerShell:
+
+```powershell
+.\gradlew.bat assembleDebug --no-daemon --console=plain
+# APK: app\build\outputs\apk\debug\app-debug.apk
 ```
 
 Run the unit tests:
@@ -124,7 +135,7 @@ artwork are hidden.
    ```sh
    adb connect <tv-ip>:5555
    adb install -r app/build/outputs/apk/debug/app-debug.apk
-   adb shell am start -n nl.vanvrouwerff.iptv/.MainActivity
+   adb shell am start -n fr.prisme.player/nl.vanvrouwerff.iptv.MainActivity
    ```
 
 ## First run
@@ -209,8 +220,9 @@ the rest of the codebase leans on manual exploratory testing on the device.
   away when the Compose BOM can be bumped.
 - **TMDB matching is best-effort** based on title and year; uncommon
   releases may stay without artwork.
-- **No DRM, no catch-up, no PVR, no Chromecast.** These are deliberately out
-  of scope.
+- **No DRM, no PVR, no Chromecast.** These are deliberately out of scope.
+  Catch-up is only available when the configured source exposes the required
+  archive metadata.
 
 ## Contributing
 
