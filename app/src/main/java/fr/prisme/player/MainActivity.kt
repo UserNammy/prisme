@@ -55,6 +55,7 @@ import fr.prisme.player.ui.splash.SplashScreen
 import fr.prisme.player.ui.theme.PrismTheme
 import fr.prisme.player.ui.theme.PrismBackground
 import fr.prisme.player.ui.wizard.WelcomeScreen
+import fr.prisme.player.ui.feedback.UiSoundEffects
 
 class MainActivity : ComponentActivity() {
 
@@ -110,6 +111,9 @@ class MainActivity : ComponentActivity() {
      * is addressed in later alphas), but that needs a Compose BOM bump and broader testing.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = try {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            UiSoundEffects.playForRemoteKey(this, event.keyCode, event.repeatCount)
+        }
         super.dispatchKeyEvent(event)
     } catch (e: IllegalStateException) {
         if (e.message?.contains("isAttached", ignoreCase = true) == true) {

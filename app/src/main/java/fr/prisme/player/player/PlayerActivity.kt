@@ -58,6 +58,7 @@ import fr.prisme.player.data.db.WatchedEpisodeEntity
 import fr.prisme.player.data.remote.HttpClient
 import fr.prisme.player.data.db.toDomain
 import fr.prisme.player.ui.theme.PrismTheme
+import fr.prisme.player.ui.feedback.UiSoundEffects
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
@@ -1075,6 +1076,7 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        UiSoundEffects.playForRemoteKey(this, keyCode, event?.repeatCount ?: 0)
         // Numeric digits always enter the channel OSD — even when a panel is open; the user
         // intent is clearly "go to this channel", so we close panels implicitly.
         if (PrismApp.get().reminders.due.value != null) {

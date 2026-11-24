@@ -514,7 +514,14 @@ private fun RailsView(
     Column(modifier = Modifier.fillMaxSize()) {
         if (searchVisible || onStartManaging != null) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 48.dp,
+                        end = 48.dp,
+                        top = if (onStartManaging != null) 8.dp else 0.dp,
+                        bottom = if (onStartManaging != null) 28.dp else 0.dp,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (searchVisible) {
