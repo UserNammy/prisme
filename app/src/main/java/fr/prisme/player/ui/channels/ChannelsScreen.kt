@@ -105,6 +105,7 @@ import fr.prisme.player.ui.theme.PrismPalette
 import fr.prisme.player.ui.theme.tvFocus
 import fr.prisme.player.ui.theme.deferredAlpha
 import fr.prisme.player.ui.theme.deferredScale
+import fr.prisme.player.ui.theme.multiplyAlpha
 
 /**
  * Rough threshold that distinguishes "bulk insert in progress" from "user genuinely has
@@ -463,7 +464,7 @@ private fun KeyHintStrip(
         modifier = modifier
             .padding(horizontal = 48.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(PrismPalette.SurfaceElevated.copy(alpha = 0.65f))
+            .background(PrismPalette.SurfaceElevated.multiplyAlpha(0.65f))
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -528,7 +529,15 @@ private fun RailsView(
                 }
                 if (onStartManaging != null) {
                     Spacer(Modifier.width(12.dp))
-                    Button(onClick = onStartManaging) {
+                    Button(
+                        onClick = onStartManaging,
+                        colors = androidx.tv.material3.ButtonDefaults.colors(
+                            containerColor = IptvPalette.SurfaceControl,
+                            contentColor = IptvPalette.TextPrimary,
+                            focusedContainerColor = IptvPalette.Accent,
+                            focusedContentColor = IptvPalette.BackgroundDeep,
+                        ),
+                    ) {
                         Text(
                             stringResource(R.string.favorites_manage),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -1301,10 +1310,10 @@ private fun SourceStatusPill(
         onClick = { if (!refreshing) onClick() },
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.6f),
+            containerColor = PrismPalette.SurfaceControl,
             contentColor = color,
-            focusedContainerColor = PrismPalette.SurfaceElevated,
-            focusedContentColor = PrismPalette.TextPrimary,
+            focusedContainerColor = PrismPalette.Accent,
+            focusedContentColor = PrismPalette.BackgroundDeep,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {
@@ -1344,10 +1353,10 @@ private fun ProfileChip(name: String, colorArgb: Int?, emoji: String?, onClick: 
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.6f),
-            contentColor = PrismPalette.TextSecondary,
-            focusedContainerColor = PrismPalette.SurfaceElevated,
-            focusedContentColor = PrismPalette.TextPrimary,
+            containerColor = PrismPalette.SurfaceControl,
+            contentColor = PrismPalette.TextPrimary,
+            focusedContainerColor = PrismPalette.Accent,
+            focusedContentColor = PrismPalette.BackgroundDeep,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = Modifier
@@ -1453,7 +1462,7 @@ private fun SearchChip(onClick: () -> Unit) {
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.6f),
+            containerColor = PrismPalette.SurfaceControl,
             contentColor = Color.White,
             focusedContainerColor = PrismPalette.Accent,
             focusedContentColor = Color.White,
@@ -1923,7 +1932,7 @@ private fun HeroBanner(
                         onClick = onMoreInfo,
                         modifier = Modifier.onFocusChanged { if (it.isFocused) focusedButton = 1 },
                         colors = androidx.tv.material3.ButtonDefaults.colors(
-                            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.65f),
+                            containerColor = PrismPalette.SurfaceControl,
                             contentColor = PrismPalette.TextPrimary,
                             focusedContainerColor = Color.White,
                             focusedContentColor = PrismPalette.BackgroundDeep,
@@ -1947,7 +1956,7 @@ private fun HeroBanner(
                         onClick = { trailerMuted = !trailerMuted },
                         modifier = Modifier.onFocusChanged { if (it.isFocused) focusedButton = 2 },
                         colors = androidx.tv.material3.ButtonDefaults.colors(
-                            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.65f),
+                            containerColor = PrismPalette.SurfaceControl,
                             contentColor = PrismPalette.TextPrimary,
                             focusedContainerColor = Color.White,
                             focusedContentColor = PrismPalette.BackgroundDeep,
@@ -1985,7 +1994,7 @@ private fun NowOnPill(title: String) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(PrismPalette.SurfaceElevated.copy(alpha = 0.85f))
+            .background(PrismPalette.SurfaceElevated.multiplyAlpha(0.85f))
             .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2400,7 +2409,7 @@ private fun CardProgressBar(fraction: Float, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(3.dp)
-            .background(PrismPalette.SurfaceLift.copy(alpha = 0.7f)),
+            .background(PrismPalette.SurfaceLift.multiplyAlpha(0.7f)),
     ) {
         Box(
             modifier = Modifier
@@ -2494,7 +2503,7 @@ private fun ChannelsSkeleton(progress: fr.prisme.player.data.repo.ImportProgress
     )
     // Pulse applied in the layer phase: the skeleton no longer recomposes 60x per second.
     val pulse = { alpha }
-    val block = PrismPalette.SurfaceElevated.copy(alpha = 1f)
+    val block = PrismPalette.SurfaceElevated
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Top-bar placeholder (title + tab pills).
@@ -2965,8 +2974,8 @@ private val COMPACT_TV_HERO_HEIGHT = 140.dp
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun heroButtonColors() = androidx.tv.material3.ButtonDefaults.colors(
-    containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.85f),
-    contentColor = PrismPalette.TextPrimary,
+    containerColor = PrismPalette.Accent,
+    contentColor = PrismPalette.BackgroundDeep,
     focusedContainerColor = Color.White,
     focusedContentColor = PrismPalette.BackgroundDeep,
 )

@@ -276,7 +276,7 @@
     <string name="channel_list_favorites">Favoris</string>
     <string name="channel_list_uncategorized">Autres</string>
     <string name="channel_list_count">Liste %1$d sur %2$d · %3$d chaînes</string>
-    <string name="channel_list_hint">◀▶ Catégorie · OK Zapper · JAUNE Commandes · RETOUR Fermer</string>
+    <string name="channel_list_hint">◀▶ Catégorie · OK Zapper · JAUNE Commandes · MENU/RETOUR Fermer</string>
     <string name="player_remaining">encore %1$s</string>
     <string name="player_live">DIRECT</string>
     <string name="player_pause">Pause</string>
@@ -284,7 +284,7 @@
     <string name="player_tracks">Audio/Sous-titres</string>
     <string name="player_next_episode">Épisode suivant</string>
     <string name="player_controls_hint">◀▶ Avancer · VERT Audio/Sous-titres · BLEU Stats · INFO Infos</string>
-    <string name="player_controls_hint_live">OK Liste des chaînes · ROUGE Chaîne précédente · VERT Audio/Sous-titres · BLEU Stats</string>
+    <string name="player_controls_hint_live">MENU ou OK Liste des chaînes · ROUGE Chaîne précédente · VERT Audio/Sous-titres · BLEU Stats</string>
     <string name="player_previous_channel">Chaîne précédente</string>
     <string name="import_downloading">Récupération du catalogue…</string>
     <string name="import_live">%1$s chaînes chargées…</string>
