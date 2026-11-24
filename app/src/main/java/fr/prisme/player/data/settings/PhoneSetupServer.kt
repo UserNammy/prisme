@@ -55,20 +55,21 @@ object PhoneSetupServer {
     /** Starts (or joins) the server; returns the URL to encode in the QR, or null offline. */
     @Synchronized
     fun start(): String? {
-        users++
         val address = lanAddress() ?: return null
         if (socket == null) {
-            token = newToken()
             val server = runCatching { ServerSocket(0) }.getOrElse {
                 Log.w(TAG, "could not open server socket", it)
                 return null
             }
+            token = newToken()
+            _submission.value = null
             socket = server
             thread = Thread({ acceptLoop(server) }, "phone-setup").apply {
                 isDaemon = true
                 start()
             }
         }
+        users++
         return "http://$address:${socket!!.localPort}/$token"
     }
 
@@ -105,6 +106,8 @@ object PhoneSetupServer {
         fun respond(status: String, contentType: String, bytes: ByteArray, extraHeaders: String = "") {
             out.write(
                 ("HTTP/1.1 $status\r\nContent-Type: $contentType\r\n$extraHeaders" +
+                    "Cache-Control: no-store, no-cache, must-revalidate\r\n" +
+                    "Pragma: no-cache\r\nX-Content-Type-Options: nosniff\r\n" +
                     "Content-Length: ${bytes.size}\r\nConnection: close\r\n\r\n").toByteArray(),
             )
             out.write(bytes)
@@ -218,10 +221,11 @@ object PhoneSetupServer {
             ?.hostAddress
     }.getOrNull()
 
-    private fun newToken(): String {
+    /** A short-lived, unguessable capability URL for the local QR setup page. */
+    internal fun newToken(): String {
         val alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
         val random = SecureRandom()
-        return (1..6).map { alphabet[random.nextInt(alphabet.length)] }.joinToString("")
+        return (1..TOKEN_LENGTH).map { alphabet[random.nextInt(alphabet.length)] }.joinToString("")
     }
 
     private fun page(content: String) = """
@@ -240,14 +244,14 @@ object PhoneSetupServer {
 
     private val FORM = """
         <h1>Configurer ma source</h1>
-        <form method="post">
+        <form method="post" autocomplete="off">
           <div class="row">
             <label><input type="radio" name="type" value="xtream" checked> Xtream Codes</label>
             <label><input type="radio" name="type" value="m3u"> M3U-URL</label>
           </div>
           <label for="host">Host (Xtream)</label><input type="text" id="host" name="host" placeholder="http://provider.example:8080" autocapitalize="off">
-          <label for="username">Identifiant</label><input type="text" id="username" name="username" autocapitalize="off">
-          <label for="password">Mot de passe</label><input type="password" id="password" name="password">
+          <label for="username">Identifiant</label><input type="text" id="username" name="username" autocapitalize="off" autocomplete="off">
+          <label for="password">Mot de passe</label><input type="password" id="password" name="password" autocomplete="off">
           <label for="m3u">M3U-URL</label><input type="url" id="m3u" name="m3u" placeholder="http://…/playlist.m3u">
           <button type="submit">Envoyer à la TV</button>
         </form>
@@ -282,4 +286,5 @@ object PhoneSetupServer {
 
     private const val MAX_BODY_BYTES = 5 * 1024 * 1024
     private const val TAG = "PhoneSetupServer"
+    private const val TOKEN_LENGTH = 16
 }

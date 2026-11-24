@@ -1,6 +1,7 @@
 package fr.prisme.player.data.settings
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SourceSetupTest {
@@ -23,5 +24,13 @@ class SourceSetupTest {
         assertEquals("http://prov.tv:8080", form["host"])
         assertEquals("jan", form["username"])
         assertEquals("a&b c", form["password"])
+    }
+
+    @Test
+    fun setupTokenIsLongAndUsesOnlyUrlSafeCharacters() {
+        val token = PhoneSetupServer.newToken()
+
+        assertEquals(16, token.length)
+        assertTrue(token.all { it in "abcdefghjkmnpqrstuvwxyz23456789" })
     }
 }
