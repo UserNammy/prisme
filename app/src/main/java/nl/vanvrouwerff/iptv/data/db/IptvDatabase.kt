@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WatchlistEntity::class,
         ReminderEntity::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = true,
 )
 abstract class IptvDatabase : RoomDatabase() {
@@ -33,7 +33,7 @@ abstract class IptvDatabase : RoomDatabase() {
 
         /** The built-in profile every install starts with. Always present; cannot be deleted. */
         const val DEFAULT_PROFILE_ID = "default"
-        const val DEFAULT_PROFILE_NAME = "Hoofdprofiel"
+        const val DEFAULT_PROFILE_NAME = "Profil principal"
         // Pleasant accent tint for the default avatar; users can pick their own for new profiles.
         const val DEFAULT_PROFILE_COLOR_ARGB: Int = 0xFFE53935.toInt()
 
@@ -84,6 +84,16 @@ abstract class IptvDatabase : RoomDatabase() {
         private val MIGRATION_16_17 = object : Migration(16, 17) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE profiles ADD COLUMN isKids INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /** v17 → v18: translate the legacy built-in profile for the French product locale. */
+        private val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "UPDATE profiles SET name = '$DEFAULT_PROFILE_NAME' " +
+                        "WHERE id = '$DEFAULT_PROFILE_ID' AND name = 'Hoofdprofiel'",
+                )
             }
         }
 
@@ -316,6 +326,7 @@ abstract class IptvDatabase : RoomDatabase() {
                         MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
                         MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
                         MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
+                        MIGRATION_17_18,
                     )
                     .addCallback(object : RoomDatabase.Callback() {
                         // Fresh installs skip migrations entirely — Room just builds tables

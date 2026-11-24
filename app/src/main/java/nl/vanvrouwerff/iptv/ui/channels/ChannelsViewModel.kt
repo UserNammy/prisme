@@ -128,11 +128,11 @@ data class ChannelsUiState(
     val isSearching: Boolean get() = searchQuery.isNotBlank()
 
     companion object {
-        const val UNCATEGORIZED = "Overig"
-        const val MY_LIST = "Mijn lijst"
-        const val FAVORITES = "Favorieten"
-        const val CONTINUE_WATCHING = "Verder kijken"
-        const val POPULAR_NOW = "Populair nu"
+        const val UNCATEGORIZED = "Autres"
+        const val MY_LIST = "Ma liste"
+        const val FAVORITES = "Favoris"
+        const val CONTINUE_WATCHING = "Continuer à regarder"
+        const val POPULAR_NOW = "Populaire maintenant"
         const val MAX_PER_RAIL = 200
         const val MAX_RAILS = 60
     }
