@@ -176,6 +176,11 @@ Actions. Un tag `v*` publie en plus une release (signée, voir `docs/RELEASE.md`
 Ne pas affirmer qu’un changement compile sans une CI verte ou une compilation
 locale réussie :
 
+Le checkout principal est placé dans OneDrive : la synchronisation peut
+verrouiller `app/build` et provoquer une erreur Gradle du type « Unable to delete
+directory ». Dans ce cas, faire la vérification dans une copie ou un worktree
+hors d’un dossier synchronisé plutôt que de supprimer des fichiers source.
+
 ```powershell
 .\gradlew.bat test --no-daemon --console=plain
 .\gradlew.bat assembleDebug --no-daemon --console=plain
