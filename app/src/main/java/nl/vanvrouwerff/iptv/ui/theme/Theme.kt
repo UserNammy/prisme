@@ -19,14 +19,23 @@ object IptvPalette {
     val SurfaceLift = Color(0x14FFFFFF)
     /** White veil at 16 %, for recessed or focused tiles. */
     val SurfaceElevated = Color(0x29FFFFFF)
+    /** Opaque blue-black control surface: keeps secondary actions readable over video art. */
+    val SurfaceControl = Color(0xFF26334B)
     /** The single semantic accent: focus and programme progress only. */
     val Accent = Color(0xFF4D86FF)
     val AccentSoft = Color(0xFF9DBBFF)
     val AccentDeep = Color(0xFF254DAD)
     val TextPrimary = Color(0xFFF4F6F7)
-    val TextSecondary = Color(0xFFB4BBD0)
-    val TextTertiary = Color(0xFFB4BBD0)
+    val TextSecondary = Color(0xFFD0D6E6)
+    val TextTertiary = Color(0xFFB3BDD3)
 }
+
+/**
+ * Reduces a translucent colour's existing opacity without turning it into a white/grey slab.
+ * `Color.copy(alpha = …)` replaces alpha; that is almost never what a veil needs.
+ */
+fun Color.multiplyAlpha(multiplier: Float): Color =
+    copy(alpha = (alpha * multiplier).coerceIn(0f, 1f))
 
 private val Scheme = darkColorScheme(
     primary = IptvPalette.Accent,

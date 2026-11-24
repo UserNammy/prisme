@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
  * "selected + focused" always look different.
  */
 object FocusStyle {
-    val Fill = Color(0xFF3B3F4C)
+    val Fill = Color(0xFF415575)
     val Border = IptvPalette.TextPrimary
     const val RowScale = 1.02f
     const val ChipScale = 1.06f

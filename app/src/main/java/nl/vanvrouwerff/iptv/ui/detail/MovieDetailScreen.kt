@@ -67,6 +67,7 @@ import coil.compose.AsyncImage
 import nl.vanvrouwerff.iptv.R
 import nl.vanvrouwerff.iptv.data.Channel
 import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
+import nl.vanvrouwerff.iptv.ui.theme.multiplyAlpha
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -236,7 +237,7 @@ internal fun DetailActionButton(
     Button(
         onClick = onClick,
         colors = androidx.tv.material3.ButtonDefaults.colors(
-            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.7f),
+            containerColor = IptvPalette.SurfaceElevated.multiplyAlpha(0.7f),
             contentColor = IptvPalette.TextPrimary,
             focusedContainerColor = IptvPalette.TextPrimary,
             focusedContentColor = IptvPalette.BackgroundDeep,

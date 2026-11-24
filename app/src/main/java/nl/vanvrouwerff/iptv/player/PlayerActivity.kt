@@ -1115,7 +1115,11 @@ class PlayerActivity : ComponentActivity() {
         }
         if (channelListVisible) {
             when (keyCode) {
-                KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> {
+                KeyEvent.KEYCODE_BACK,
+                KeyEvent.KEYCODE_ESCAPE,
+                KeyEvent.KEYCODE_MENU,
+                KeyEvent.KEYCODE_GUIDE,
+                -> {
                     channelListVisible = false
                     playerViewRef?.requestFocus()
                     return true
@@ -1228,9 +1232,20 @@ class PlayerActivity : ComponentActivity() {
                 channels.getOrNull(currentIndex)?.let { showBanner(it) }
                 true
             }
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_GUIDE,
+            -> {
+                // A live-TV menu must keep the picture playing while exposing the whole
+                // catalogue. MENU/Guide is therefore a direct, discoverable entry point
+                // to the left-hand zap list; OK remains a convenient second shortcut.
+                if (isLive) openChannelList() else {
+                    tracksOverlayVisible = !tracksOverlayVisible
+                    statsOverlayVisible = false
+                }
+                true
+            }
             KeyEvent.KEYCODE_PROG_GREEN,
             KeyEvent.KEYCODE_CAPTIONS,
-            KeyEvent.KEYCODE_MENU,
             KeyEvent.KEYCODE_SETTINGS,
             -> {
                 tracksOverlayVisible = !tracksOverlayVisible

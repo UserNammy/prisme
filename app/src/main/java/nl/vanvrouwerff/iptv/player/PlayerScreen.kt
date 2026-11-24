@@ -69,6 +69,7 @@ import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import nl.vanvrouwerff.iptv.R
 import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
+import nl.vanvrouwerff.iptv.ui.theme.multiplyAlpha
 
 @OptIn(UnstableApi::class, ExperimentalTvMaterial3Api::class)
 @Composable
@@ -414,7 +415,7 @@ private fun SkipIntroOverlay(
             },
             modifier = Modifier.focusRequester(skipFocus),
             colors = androidx.tv.material3.ButtonDefaults.colors(
-                containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.85f),
+                containerColor = IptvPalette.SurfaceControl,
                 contentColor = androidx.compose.ui.graphics.Color.White,
                 focusedContainerColor = IptvPalette.Accent,
                 focusedContentColor = androidx.compose.ui.graphics.Color.White,
@@ -834,7 +835,7 @@ private fun TracksKeyHint() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(999.dp))
-            .background(IptvPalette.SurfaceElevated.copy(alpha = 0.5f))
+            .background(IptvPalette.SurfaceElevated.multiplyAlpha(0.5f))
             .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,

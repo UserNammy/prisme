@@ -101,6 +101,7 @@ import nl.vanvrouwerff.iptv.data.tmdb.TmdbCatalogueMatcher
 import nl.vanvrouwerff.iptv.data.tmdb.TmdbClient
 import nl.vanvrouwerff.iptv.ui.theme.FocusStyle
 import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
+import nl.vanvrouwerff.iptv.ui.theme.multiplyAlpha
 import nl.vanvrouwerff.iptv.ui.theme.tvFocus
 
 /**
@@ -460,7 +461,7 @@ private fun KeyHintStrip(
         modifier = modifier
             .padding(horizontal = 48.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(IptvPalette.SurfaceElevated.copy(alpha = 0.65f))
+            .background(IptvPalette.SurfaceElevated.multiplyAlpha(0.65f))
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -525,7 +526,15 @@ private fun RailsView(
                 }
                 if (onStartManaging != null) {
                     Spacer(Modifier.width(12.dp))
-                    Button(onClick = onStartManaging) {
+                    Button(
+                        onClick = onStartManaging,
+                        colors = androidx.tv.material3.ButtonDefaults.colors(
+                            containerColor = IptvPalette.SurfaceControl,
+                            contentColor = IptvPalette.TextPrimary,
+                            focusedContainerColor = IptvPalette.Accent,
+                            focusedContentColor = IptvPalette.BackgroundDeep,
+                        ),
+                    ) {
                         Text(
                             stringResource(R.string.favorites_manage),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -1299,10 +1308,10 @@ private fun SourceStatusPill(
         onClick = { if (!refreshing) onClick() },
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.6f),
+            containerColor = IptvPalette.SurfaceControl,
             contentColor = color,
-            focusedContainerColor = IptvPalette.SurfaceElevated,
-            focusedContentColor = IptvPalette.TextPrimary,
+            focusedContainerColor = IptvPalette.Accent,
+            focusedContentColor = IptvPalette.BackgroundDeep,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {
@@ -1342,10 +1351,10 @@ private fun ProfileChip(name: String, colorArgb: Int?, emoji: String?, onClick: 
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.6f),
-            contentColor = IptvPalette.TextSecondary,
-            focusedContainerColor = IptvPalette.SurfaceElevated,
-            focusedContentColor = IptvPalette.TextPrimary,
+            containerColor = IptvPalette.SurfaceControl,
+            contentColor = IptvPalette.TextPrimary,
+            focusedContainerColor = IptvPalette.Accent,
+            focusedContentColor = IptvPalette.BackgroundDeep,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = Modifier
@@ -1451,7 +1460,7 @@ private fun SearchChip(onClick: () -> Unit) {
         onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(999.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.6f),
+            containerColor = IptvPalette.SurfaceControl,
             contentColor = Color.White,
             focusedContainerColor = IptvPalette.Accent,
             focusedContentColor = Color.White,
@@ -1920,7 +1929,7 @@ private fun HeroBanner(
                         onClick = onMoreInfo,
                         modifier = Modifier.onFocusChanged { if (it.isFocused) focusedButton = 1 },
                         colors = androidx.tv.material3.ButtonDefaults.colors(
-                            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.65f),
+                            containerColor = IptvPalette.SurfaceControl,
                             contentColor = IptvPalette.TextPrimary,
                             focusedContainerColor = Color.White,
                             focusedContentColor = IptvPalette.BackgroundDeep,
@@ -1944,7 +1953,7 @@ private fun HeroBanner(
                         onClick = { trailerMuted = !trailerMuted },
                         modifier = Modifier.onFocusChanged { if (it.isFocused) focusedButton = 2 },
                         colors = androidx.tv.material3.ButtonDefaults.colors(
-                            containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.65f),
+                            containerColor = IptvPalette.SurfaceControl,
                             contentColor = IptvPalette.TextPrimary,
                             focusedContainerColor = Color.White,
                             focusedContentColor = IptvPalette.BackgroundDeep,
@@ -1982,7 +1991,7 @@ private fun NowOnPill(title: String) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(IptvPalette.SurfaceElevated.copy(alpha = 0.85f))
+            .background(IptvPalette.SurfaceElevated.multiplyAlpha(0.85f))
             .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2397,7 +2406,7 @@ private fun CardProgressBar(fraction: Float, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(3.dp)
-            .background(IptvPalette.SurfaceLift.copy(alpha = 0.7f)),
+            .background(IptvPalette.SurfaceLift.multiplyAlpha(0.7f)),
     ) {
         Box(
             modifier = Modifier
@@ -2489,7 +2498,7 @@ private fun ChannelsSkeleton(progress: nl.vanvrouwerff.iptv.data.repo.ImportProg
         ),
         label = "pulse",
     )
-    val block = IptvPalette.SurfaceElevated.copy(alpha = alpha)
+    val block = IptvPalette.SurfaceElevated.multiplyAlpha(alpha)
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Top-bar placeholder (title + tab pills).
@@ -2959,8 +2968,8 @@ private val COMPACT_TV_HERO_HEIGHT = 140.dp
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun heroButtonColors() = androidx.tv.material3.ButtonDefaults.colors(
-    containerColor = IptvPalette.SurfaceElevated.copy(alpha = 0.85f),
-    contentColor = IptvPalette.TextPrimary,
+    containerColor = IptvPalette.Accent,
+    contentColor = IptvPalette.BackgroundDeep,
     focusedContainerColor = Color.White,
     focusedContentColor = IptvPalette.BackgroundDeep,
 )

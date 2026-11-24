@@ -262,7 +262,7 @@
     <string name="channel_list_favorites">Favorieten</string>
     <string name="channel_list_uncategorized">Overig</string>
     <string name="channel_list_count">Lijst %1$d van %2$d · %3$d zenders</string>
-    <string name="channel_list_hint">◀▶ Categorie · OK Zappen · GEEL Bediening · BACK Sluiten</string>
+    <string name="channel_list_hint">◀▶ Categorie · OK Zappen · GEEL Bediening · MENU/BACK Sluiten</string>
     <string name="guide_title">Tv-gids</string>
     <string name="guide_open">Gids</string>
     <string name="guide_no_data">Geen programmagegevens</string>
@@ -273,7 +273,7 @@
     <string name="player_tracks">Audio/Ondertitels</string>
     <string name="player_next_episode">Volgende aflevering</string>
     <string name="player_controls_hint">◀▶ Spoelen · GROEN Audio/Ondertitels · BLAUW Stats · INFO Info</string>
-    <string name="player_controls_hint_live">OK Zenderlijst · ROOD Vorige zender · GROEN Audio/Ondertitels · BLAUW Stats</string>
+    <string name="player_controls_hint_live">MENU of OK Zenderlijst · ROOD Vorige zender · GROEN Audio/Ondertitels · BLAUW Stats</string>
     <string name="player_previous_channel">Vorige zender</string>
     <string name="import_downloading">Catalogus ophalen…</string>
     <string name="import_live">%1$s zenders geladen…</string>
