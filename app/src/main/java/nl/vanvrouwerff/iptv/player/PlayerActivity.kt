@@ -58,6 +58,7 @@ import nl.vanvrouwerff.iptv.data.db.WatchedEpisodeEntity
 import nl.vanvrouwerff.iptv.data.remote.HttpClient
 import nl.vanvrouwerff.iptv.data.db.toDomain
 import nl.vanvrouwerff.iptv.ui.theme.IptvTheme
+import nl.vanvrouwerff.iptv.ui.feedback.UiSoundEffects
 
 @OptIn(UnstableApi::class)
 class PlayerActivity : ComponentActivity() {
@@ -1075,6 +1076,7 @@ class PlayerActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        UiSoundEffects.playForRemoteKey(this, keyCode, event?.repeatCount ?: 0)
         // Numeric digits always enter the channel OSD — even when a panel is open; the user
         // intent is clearly "go to this channel", so we close panels implicitly.
         if (IptvApp.get().reminders.due.value != null) {

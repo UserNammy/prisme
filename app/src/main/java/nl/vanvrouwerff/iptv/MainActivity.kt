@@ -39,6 +39,7 @@ import nl.vanvrouwerff.iptv.ui.categories.CategoriesScreen
 import nl.vanvrouwerff.iptv.ui.guide.GuideScreen
 import nl.vanvrouwerff.iptv.ui.channels.ChannelsScreen
 import nl.vanvrouwerff.iptv.ui.detail.MovieDetailScreen
+import nl.vanvrouwerff.iptv.ui.feedback.UiSoundEffects
 import nl.vanvrouwerff.iptv.ui.seriesdetail.Episode
 import nl.vanvrouwerff.iptv.ui.seriesdetail.SeriesDetailScreen
 import nl.vanvrouwerff.iptv.ui.seriesdetail.SeriesRef
@@ -86,6 +87,9 @@ class MainActivity : ComponentActivity() {
      * is addressed in later alphas), but that needs a Compose BOM bump and broader testing.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = try {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            UiSoundEffects.playForRemoteKey(this, event.keyCode, event.repeatCount)
+        }
         super.dispatchKeyEvent(event)
     } catch (e: IllegalStateException) {
         if (e.message?.contains("isAttached", ignoreCase = true) == true) {
