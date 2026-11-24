@@ -33,7 +33,7 @@ class M3uPlaylistRepository(
                 if (!response.isSuccessful) {
                     error("Playlist HTTP ${response.code}")
                 }
-                val body = response.body ?: error("Lege playlist")
+                val body = response.body ?: error("Playlist vide")
                 val channels = body.charStream().buffered().useLines { M3uParser.parse(it) }
                 onProgress(ImportProgress(ImportProgress.Stage.Live, channels.size))
                 PlaylistSnapshot(

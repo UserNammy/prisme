@@ -108,7 +108,7 @@ object PhoneSetupServer {
             out.flush()
         }
         if (path != token) {
-            respond("404 Not Found", page("<p>Niet gevonden.</p>"))
+            respond("404 Not Found", page("<p>Page introuvable.</p>"))
             return
         }
         when (method) {
@@ -129,9 +129,9 @@ object PhoneSetupServer {
                     username = fields["username"].orEmpty().trim(),
                     password = fields["password"].orEmpty(),
                 )
-                respond("200 OK", page("<h2>Ontvangen</h2><p>Kijk op je tv: de gegevens staan nu in Instellingen. Test de verbinding en sla op.</p>"))
+                respond("200 OK", page("<h2>Données reçues</h2><p>Regardez votre TV : les données sont maintenant dans les réglages. Testez la connexion, puis enregistrez.</p>"))
             }
-            else -> respond("405 Method Not Allowed", page("<p>Niet ondersteund.</p>"))
+            else -> respond("405 Method Not Allowed", page("<p>Méthode non prise en charge.</p>"))
         }
     }
 
@@ -159,9 +159,9 @@ object PhoneSetupServer {
     }
 
     private fun page(content: String) = """
-        <!doctype html><html lang="nl"><head><meta charset="utf-8">
+        <!doctype html><html lang="fr"><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>IPTV Player instellen</title>
+        <title>Configurer Prism</title>
         <style>
           body{font-family:system-ui,sans-serif;background:#0A0A0C;color:#F4F4F6;margin:0;padding:24px;max-width:480px}
           h1,h2{font-size:1.3rem} label{display:block;margin:14px 0 4px;color:#B4B7C0}
@@ -171,17 +171,17 @@ object PhoneSetupServer {
     """.trimIndent()
 
     private val FORM = """
-        <h1>Bron instellen</h1>
+        <h1>Configurer une source</h1>
         <form method="post">
           <div class="row">
             <label><input type="radio" name="type" value="xtream" checked> Xtream Codes</label>
             <label><input type="radio" name="type" value="m3u"> M3U-URL</label>
           </div>
           <label for="host">Host (Xtream)</label><input type="text" id="host" name="host" placeholder="http://provider.example:8080" autocapitalize="off">
-          <label for="username">Gebruikersnaam</label><input type="text" id="username" name="username" autocapitalize="off">
-          <label for="password">Wachtwoord</label><input type="password" id="password" name="password">
+          <label for="username">Identifiant</label><input type="text" id="username" name="username" autocapitalize="off">
+          <label for="password">Mot de passe</label><input type="password" id="password" name="password">
           <label for="m3u">M3U-URL</label><input type="url" id="m3u" name="m3u" placeholder="http://…/playlist.m3u">
-          <button type="submit">Naar de tv sturen</button>
+          <button type="submit">Envoyer à la TV</button>
         </form>
     """.trimIndent()
 

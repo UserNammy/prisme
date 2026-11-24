@@ -121,7 +121,7 @@ class PlaylistRefreshUseCase(
         }
 
     private suspend fun refresh(force: Boolean, onCatalogueReady: () -> Unit) {
-        val repo = repository() ?: error("Geen bron geconfigureerd.")
+        val repo = repository() ?: error("Aucune source n’est configurée.")
 
         val etag = if (force) null else settings.playlistEtag.first()
         val lastMod = if (force) null else settings.playlistLastModified.first()

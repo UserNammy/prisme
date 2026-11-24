@@ -148,7 +148,7 @@ class SeriesDetailViewModel : ViewModel() {
 
             val config = app.settings.sourceConfig.first() as? SourceConfig.Xtream
             if (config == null) {
-                _state.update { it.copy(loading = false, error = "Geen Xtream-bron.") }
+                _state.update { it.copy(loading = false, error = "Aucune source Xtream n’est configurée.") }
                 return@launch
             }
 
@@ -180,7 +180,7 @@ class SeriesDetailViewModel : ViewModel() {
                 },
                 onFailure = { err ->
                     _state.update {
-                        it.copy(loading = false, error = err.message ?: "Laden mislukt")
+                        it.copy(loading = false, error = err.message ?: "Échec du chargement")
                     }
                 },
             )
