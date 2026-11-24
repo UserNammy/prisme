@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,12 +41,13 @@ fun WelcomeScreen(onConfigure: () -> Unit) {
     androidx.compose.runtime.LaunchedEffect(phoneSubmission) {
         if (phoneSubmission != null) onConfigure()
     }
+    val compact = LocalConfiguration.current.screenWidthDp < 600
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 64.dp, vertical = 36.dp),
+                .padding(horizontal = if (compact) 20.dp else 64.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
         ) {
@@ -75,22 +78,14 @@ fun WelcomeScreen(onConfigure: () -> Unit) {
 
             Spacer(Modifier.height(24.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                WizardStep(
-                    number = "1",
-                    title = stringResource(R.string.wizard_step1_title),
-                    body = stringResource(R.string.wizard_step1_body),
-                )
-                WizardStep(
-                    number = "2",
-                    title = stringResource(R.string.wizard_step2_title),
-                    body = stringResource(R.string.wizard_step2_body),
-                )
-                WizardStep(
-                    number = "3",
-                    title = stringResource(R.string.wizard_step3_title),
-                    body = stringResource(R.string.wizard_step3_body),
-                )
+            if (compact) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    WizardSteps()
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    WizardSteps()
+                }
             }
 
             Spacer(Modifier.height(32.dp))
@@ -108,10 +103,10 @@ fun WelcomeScreen(onConfigure: () -> Unit) {
 
             Spacer(Modifier.height(20.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val actionContent: @Composable () -> Unit = {
                 Button(
                     onClick = onConfigure,
-                    modifier = Modifier.width(320.dp),
+                    modifier = if (compact) Modifier.fillMaxWidth() else Modifier.width(320.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.wizard_configure),
@@ -119,11 +114,35 @@ fun WelcomeScreen(onConfigure: () -> Unit) {
                         modifier = Modifier.padding(vertical = 4.dp),
                     )
                 }
-                Spacer(Modifier.width(40.dp))
-                nl.vanvrouwerff.iptv.ui.settings.PhoneSetupPanel(qrSize = 110.dp)
+            }
+            if (compact) {
+                Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    actionContent()
+                    nl.vanvrouwerff.iptv.ui.settings.PhoneSetupPanel(qrSize = 110.dp)
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    actionContent()
+                    Spacer(Modifier.width(40.dp))
+                    nl.vanvrouwerff.iptv.ui.settings.PhoneSetupPanel(qrSize = 110.dp)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.WizardSteps() {
+    WizardStep("1", stringResource(R.string.wizard_step1_title), stringResource(R.string.wizard_step1_body))
+    WizardStep("2", stringResource(R.string.wizard_step2_title), stringResource(R.string.wizard_step2_body))
+    WizardStep("3", stringResource(R.string.wizard_step3_title), stringResource(R.string.wizard_step3_body))
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.ColumnScope.WizardSteps() {
+    WizardStep("1", stringResource(R.string.wizard_step1_title), stringResource(R.string.wizard_step1_body))
+    WizardStep("2", stringResource(R.string.wizard_step2_title), stringResource(R.string.wizard_step2_body))
+    WizardStep("3", stringResource(R.string.wizard_step3_title), stringResource(R.string.wizard_step3_body))
 }
 
 @Composable

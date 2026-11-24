@@ -24,6 +24,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -44,6 +45,7 @@ import nl.vanvrouwerff.iptv.ui.seriesdetail.SeriesRef
 import nl.vanvrouwerff.iptv.ui.seriesdetail.SeriesSeason
 import nl.vanvrouwerff.iptv.ui.profilepicker.ProfilePickerScreen
 import nl.vanvrouwerff.iptv.ui.profiles.ProfilesScreen
+import nl.vanvrouwerff.iptv.ui.mobile.MobileHomeScreen
 import nl.vanvrouwerff.iptv.ui.reminders.ReminderHost
 import nl.vanvrouwerff.iptv.ui.settings.SettingsScreen
 import nl.vanvrouwerff.iptv.ui.splash.SplashScreen
@@ -306,6 +308,10 @@ private fun AppRouteHost(
     onPlayEpisode: (Episode, SeriesSeason, SeriesRef, Long) -> Unit,
     onPlayDirect: (Channel) -> Unit,
 ) {
+    // The TV UI is intentionally spacious and D-pad-first. Compact devices get their own
+    // touch layout instead of a squeezed version of the same rails. A 600dp boundary is
+    // the Android large-screen convention and still lets a folded phone use the phone UI.
+    val isCompactDevice = LocalConfiguration.current.screenWidthDp < 600
     // Keyed on the route so two consecutive screens of the same kind (film → related film)
     // don't share remembered state such as the initial focus request.
     Box(modifier = Modifier.fillMaxSize()) { key(route) {
@@ -324,7 +330,19 @@ private fun AppRouteHost(
                 onPicked = { onNavigate(Route.Channels) },
                 onManageProfiles = { onNavigate(Route.Profiles) },
             )
-            Route.Channels -> ChannelsScreen(
+            Route.Channels -> if (isCompactDevice) {
+                MobileHomeScreen(
+                    onOpenSettings = { onNavigate(Route.Settings) },
+                    onPlay = { channel, scope -> onPlay(channel, scope, 0L) },
+                    onOpenDetail = { channel ->
+                        when (channel.type) {
+                            ContentType.MOVIE -> onNavigate(Route.MovieDetail(channel.id, channel))
+                            ContentType.SERIES -> onNavigate(Route.SeriesDetail(channel.id.removePrefix("xt-series:"), channel))
+                            ContentType.TV -> onPlay(channel, listOf(channel), 0L)
+                        }
+                    },
+                )
+            } else ChannelsScreen(
                 onOpenSettings = { onNavigate(Route.Settings) },
                 onOpenCategories = { type, category -> onNavigate(Route.Categories(type, category)) },
                 onOpenGuide = { onNavigate(Route.Guide) },

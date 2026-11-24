@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Prism</string>
+    <string name="mobile_library_subtitle">Votre bibliothèque</string>
+    <string name="mobile_settings">Réglages</string>
+    <string name="mobile_search">Rechercher une chaîne, un film, une série</string>
+    <string name="mobile_live">Direct</string>
+    <string name="mobile_movies">Films</string>
+    <string name="mobile_series">Séries</string>
+    <string name="mobile_empty_library">Aucun résultat dans votre bibliothèque.</string>
+    <string name="mobile_uncategorized">Sans catégorie</string>
 
     <string name="nav_channels">Kanalen</string>
     <string name="nav_settings">Instellingen</string>

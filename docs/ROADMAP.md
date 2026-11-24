@@ -17,7 +17,8 @@ Everything needed to play a source is stored on the user's own devices.
 ## Next engineering milestones
 
 1. Extract playlist, database and playback code into a shared `core` module.
-2. Split TV and phone navigation so each gets a native remote/touch UI.
+2. Complete the split TV / phone navigation. The first compact touch home is
+   in place; details, profiles and settings still need phone-specific polish.
 3. Add authenticated LAN pairing, encrypted configuration export/import, and
    an optional single-playback lease between paired devices.
 4. Add a small quality profile system: hardware scaling by default, optional

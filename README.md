@@ -1,7 +1,8 @@
 # Prisme
 
-> État : fondation en cours. L'APK s'installe désormais sur Android TV et sur
-> Android mobile ; l'interface tactile dédiée fait partie de l'étape suivante.
+> État : fondation en cours. Android TV dispose de son interface télécommande,
+> et Android mobile d'un premier accueil tactile pour parcourir la bibliothèque.
+> Les fiches détaillées et réglages continuent d'être affinés pour le téléphone.
 
 Prisme est un lecteur IPTV personnel, sans contenu intégré, sans compte et sans
 backend. Les playlists et identifiants appartiennent à l'utilisateur et restent

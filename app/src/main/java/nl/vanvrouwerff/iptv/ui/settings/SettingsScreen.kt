@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,6 +60,7 @@ fun SettingsScreen(
 ) {
     val state by vm.state.collectAsState()
     var pinDialog by remember { mutableStateOf(false) }
+    val horizontalPadding = if (LocalConfiguration.current.screenWidthDp < 600) 20.dp else 64.dp
 
     // BACK goes back without saving — matches the "Terug"-labelled button below, so the
     // remote BACK key is no longer a no-op on this screen.
@@ -68,7 +71,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 64.dp, vertical = 36.dp),
+                .padding(horizontal = horizontalPadding, vertical = 28.dp),
             verticalArrangement = Arrangement.spacedBy(28.dp),
         ) {
             Text(
@@ -269,7 +272,7 @@ private fun SourceSection(
             onValueChange = vm::setM3uUrl,
             label = { androidx.compose.material3.Text(stringResource(R.string.settings_m3u_url)) },
             singleLine = true,
-            modifier = Modifier.width(720.dp),
+            modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
         )
         SourceType.Xtream -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
@@ -277,14 +280,14 @@ private fun SourceSection(
                 onValueChange = vm::setHost,
                 label = { androidx.compose.material3.Text(stringResource(R.string.settings_xtream_host)) },
                 singleLine = true,
-                modifier = Modifier.width(720.dp),
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
             )
             OutlinedTextField(
                 value = state.username,
                 onValueChange = vm::setUsername,
                 label = { androidx.compose.material3.Text(stringResource(R.string.settings_xtream_user)) },
                 singleLine = true,
-                modifier = Modifier.width(720.dp),
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
             )
             OutlinedTextField(
                 value = state.password,
@@ -293,7 +296,7 @@ private fun SourceSection(
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.width(720.dp),
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
             )
             OutlinedTextField(
                 value = state.categoryFilter,
@@ -303,7 +306,7 @@ private fun SourceSection(
                     androidx.compose.material3.Text(stringResource(R.string.settings_category_filter_hint))
                 },
                 singleLine = true,
-                modifier = Modifier.width(720.dp),
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
             )
         }
     }
@@ -393,7 +396,8 @@ internal fun SwitchRow(title: String, body: String?, checked: Boolean, onToggle:
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = Modifier
-            .width(720.dp)
+            .widthIn(max = 720.dp)
+            .fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
             .tvFocus(focused, shape),
     ) {
@@ -449,7 +453,8 @@ private fun ChoiceRow(title: String, value: String, onClick: () -> Unit) {
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = Modifier
-            .width(720.dp)
+            .widthIn(max = 720.dp)
+            .fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
             .tvFocus(focused, shape),
     ) {
