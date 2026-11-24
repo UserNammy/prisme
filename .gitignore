@@ -1,0 +1,25 @@
+# Android / Gradle
+*.iml
+.gradle/
+/build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+
+# Local machine-specific config — contains SDK path and secrets (TMDB token).
+# Never commit.
+local.properties
+
+# IDE
+/.idea/
+
+# Claude Code / AI tooling state
+/.claude/
+
+# Local checkout used to inspect upstream sources; never part of this project.
+/work/
+
+# macOS
+.DS_Store
