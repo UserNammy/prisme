@@ -48,6 +48,7 @@ import nl.vanvrouwerff.iptv.ui.reminders.ReminderHost
 import nl.vanvrouwerff.iptv.ui.settings.SettingsScreen
 import nl.vanvrouwerff.iptv.ui.splash.SplashScreen
 import nl.vanvrouwerff.iptv.ui.theme.IptvTheme
+import nl.vanvrouwerff.iptv.ui.theme.PrismBackground
 import nl.vanvrouwerff.iptv.ui.wizard.WelcomeScreen
 
 class MainActivity : ComponentActivity() {
@@ -56,7 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             IptvTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
+                PrismBackground {
                     AppRoot(
                         onPlay = { channel, list, resumeMs -> openPlayer(channel, list, resumeMs) },
                         onPlayEpisode = { ep, season, series, resumeMs -> openPlayerForEpisode(ep, season, series, resumeMs) },

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Prisme</string>
+    <string name="app_name">Prism</string>
 
     <string name="nav_channels">Kanalen</string>
     <string name="nav_settings">Instellingen</string>

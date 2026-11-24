@@ -12,18 +12,20 @@ import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.darkColorScheme as m3DarkColorScheme
 
 object IptvPalette {
-    val BackgroundDeep = Color(0xFF0A0A0C)
-    val BackgroundLift = Color(0xFF141418)
-    val SurfaceLift = Color(0xFF1D1F26)
-    val SurfaceElevated = Color(0xFF262933)
-    val Accent = Color(0xFFFF3B5C)
-    val AccentSoft = Color(0xFFFF7A92)
-    val AccentDeep = Color(0xFF9E0031)
-    val TextPrimary = Color(0xFFF4F4F6)
-    val TextSecondary = Color(0xFFB4B7C0)
-    // Lifted from #7A7E8A (~4.0:1 contrast on BackgroundDeep, WCAG AA borderline at 3m)
-    // to #9AA0AC (~6.4:1) so metadata lines in detail screens stay legible from the couch.
-    val TextTertiary = Color(0xFF9AA0AC)
+    /** Prism DA: pure black under the fixed blue/red cloud composition. */
+    val BackgroundDeep = Color(0xFF000000)
+    val BackgroundLift = Color(0x14000000)
+    /** White veil at 8 %, for ordinary tiles and panels. */
+    val SurfaceLift = Color(0x14FFFFFF)
+    /** White veil at 16 %, for recessed or focused tiles. */
+    val SurfaceElevated = Color(0x29FFFFFF)
+    /** The single semantic accent: focus and programme progress only. */
+    val Accent = Color(0xFF4D86FF)
+    val AccentSoft = Color(0xFF9DBBFF)
+    val AccentDeep = Color(0xFF254DAD)
+    val TextPrimary = Color(0xFFF4F6F7)
+    val TextSecondary = Color(0xFFB4BBD0)
+    val TextTertiary = Color(0xFFB4BBD0)
 }
 
 private val Scheme = darkColorScheme(

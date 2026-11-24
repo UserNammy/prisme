@@ -150,11 +150,9 @@ fun ChannelsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(IptvPalette.BackgroundDeep),
+            .background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f)),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            AmbientBackdrop()
-
             when {
                 // Keep the skeleton up while the first refresh is still running. Room emits
                 // mid-bulk-insert with only a handful of rows, which — combined with the

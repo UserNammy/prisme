@@ -13,11 +13,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -42,6 +41,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import nl.vanvrouwerff.iptv.R
 import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
+import nl.vanvrouwerff.iptv.ui.theme.PrismBackground
 
 /**
  * Full-screen splash shown while the app is still resolving its initial state
@@ -59,26 +59,7 @@ import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
  */
 @Composable
 fun SplashScreen(message: String? = null) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(IptvPalette.BackgroundDeep),
-    ) {
-        // Ambient accent glow — identical to the Channels screen backdrop so the
-        // crossfade into the real UI feels like a continuation, not a cut.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            IptvPalette.AccentDeep.copy(alpha = 0.28f),
-                            IptvPalette.BackgroundDeep,
-                        ),
-                        radius = 1600f,
-                    )
-                )
-        )
+    PrismBackground {
 
         // Entry animation: slight zoom-in + fade so the logo "settles" on screen
         // rather than popping. Kept short (320 ms) so on fast starts the splash
@@ -99,11 +80,24 @@ fun SplashScreen(message: String? = null) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_iptv_logo),
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.size(width = 320.dp, height = 140.dp),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_iptv_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(108.dp),
+                )
+                Text(
+                    text = "prism",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        color = IptvPalette.TextPrimary,
+                        fontSize = 68.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                )
+            }
 
             Spacer(Modifier.height(28.dp))
 
