@@ -7,9 +7,11 @@
   <style>
     :root { --ink:#F4F6F7; --muted:#B4BBD0; --bg:#000; --panel:rgba(255,255,255,.08); --panel-2:rgba(255,255,255,.16); --blue:#4D86FF; --line:rgba(255,255,255,.16); }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; background:radial-gradient(ellipse 55% 65% at 10% 12%,rgba(50,100,255,.55),rgba(50,100,255,0) 70%),radial-gradient(ellipse 30% 35% at 58% 0%,rgba(40,80,220,.32),rgba(40,80,220,0) 70%),radial-gradient(ellipse 50% 60% at 94% 90%,rgba(255,50,70,.48),rgba(255,50,70,0) 70%),radial-gradient(ellipse 34% 38% at 42% 104%,rgba(220,40,80,.30),rgba(220,40,80,0) 70%),var(--bg); color:var(--ink); font-family:Onest,system-ui,sans-serif; }
+    body { margin:0; min-height:100vh; background:#000; color:var(--ink); font-family:Onest,system-ui,sans-serif; }
     button { font:inherit; color:inherit; }
-    .app { min-height:100vh; display:grid; grid-template-columns:264px 1fr; }
+    .app { min-height:100vh; display:grid; grid-template-columns:264px 1fr; position:relative; isolation:isolate; overflow:hidden; }
+    .app::before { content:""; position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(ellipse 60% 68% at -10% -8%,rgba(49,91,217,.68) 0,rgba(37,75,184,.52) 35%,rgba(13,27,72,.34) 58%,transparent 76%),radial-gradient(ellipse 38% 40% at 104% 108%,rgba(255,69,89,.50) 0,rgba(200,38,61,.32) 43%,transparent 74%),radial-gradient(ellipse 32% 32% at 4% 24%,rgba(64,104,255,.25) 0,transparent 72%),#000; }
+    .rail, main, .mobile-nav { position:relative; z-index:1; }
     .rail { padding:32px 18px; border-right:1px solid var(--line); background:rgba(0,0,0,.24); display:flex; flex-direction:column; gap:34px; }
     .brand { display:flex; align-items:center; gap:11px; font-size:27px; letter-spacing:-1px; font-weight:600; }
     .brand-mark { width:29px; height:29px; display:block; }
