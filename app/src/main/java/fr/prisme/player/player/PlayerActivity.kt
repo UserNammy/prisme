@@ -362,7 +362,6 @@ class PlayerActivity : ComponentActivity() {
     }
 
     private fun initPlayer(initialResumeMs: Long) {
-        logAudioCapabilities()
         // Route audio through the media stream, enable decoder fallback (many IPTV
         // streams carry AC-3/E-AC-3 audio that the primary MediaCodec on the Formuler
         // refuses — the fallback decoder then picks it up instead of silently dropping
@@ -372,6 +371,7 @@ class PlayerActivity : ComponentActivity() {
             .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
             .setUsage(C.USAGE_MEDIA)
             .build()
+        logAudioCapabilities(audioAttributes)
         val renderersFactory = DefaultRenderersFactory(this)
             .setEnableDecoderFallback(true)
         // Extractors factory with ALL the TS flags that matter for IPTV:
@@ -719,9 +719,9 @@ class PlayerActivity : ComponentActivity() {
      * "codec decoder is missing" and "HDMI passthrough is disabled" when a track reports
      * `supported=false`.
      */
-    private fun logAudioCapabilities() {
+    private fun logAudioCapabilities(audioAttributes: AudioAttributes) {
         runCatching {
-            val caps = AudioCapabilities.getCapabilities(this)
+            val caps = AudioCapabilities.getCapabilities(this, audioAttributes, null)
             val encodings = listOf(
                 AudioFormat.ENCODING_PCM_16BIT to "PCM_16",
                 AudioFormat.ENCODING_AC3 to "AC3",
