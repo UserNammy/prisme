@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -58,6 +59,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Hands the platform launch window back to our normal app theme just before
+        // Compose starts. Calling this before setContent prevents the old launcher icon
+        // from being stretched as a transient splash screen on Android 12 and newer.
+        installSplashScreen()
+        // The emulator's launcher uses a translucent system bar. Keep the short platform
+        // splash visually self-contained instead of allowing that wallpaper to peek through.
+        window.statusBarColor = getColor(R.color.splash_background)
+        window.navigationBarColor = getColor(R.color.splash_background)
         setContent {
             IptvTheme {
                 PrismBackground {
