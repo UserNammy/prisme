@@ -1,0 +1,170 @@
+# Prism — passation IA
+
+Ce document est le point d'entrée pour toute IA ou développeur qui reprend le
+projet. Le lire avant de modifier le code.
+
+## But du projet
+
+**Prism** est un lecteur IPTV personnel pour Android TV et Android mobile.
+Il ne contient aucun flux, aucune playlist, aucun compte et aucun backend
+obligatoire. L’utilisateur renseigne uniquement ses propres sources légitimes
+(M3U/M3U8 ou Xtream).
+
+Objectif produit : une application très légère, rapide, lisible à la TV,
+agréable sur téléphone et visuellement fidèle à la direction artistique Prism.
+
+## Limites à respecter
+
+- Ne pas ajouter de flux, identifiants ou contenu tiers au dépôt.
+- Ne pas contourner les limites de connexion d’un fournisseur, un portail lié à
+  une adresse MAC, ou une restriction d’abonnement.
+- L’app pourra à terme coordonner une seule lecture entre appareils *Prism*
+  appairés, mais elle ne peut pas modifier la limite imposée par un fournisseur.
+- Préférer le local-first : les données et identifiants restent sur les appareils
+  de l’utilisateur. La configuration TV par QR utilise déjà une petite page LAN
+  éphémère, sans cloud.
+- Les effets visuels ne doivent jamais dégrader la lecture vidéo. Pas d’upscale
+  logiciel lourd ni de filtre GPU permanent ; le décodage matériel et le scaling
+  matériel sont le défaut.
+
+## État au dernier commit
+
+Dernier jalon : `ede6056` — **Add compact phone navigation and French UI**.
+
+Fonctionnel dans la base existante :
+
+- sources M3U/M3U8 et Xtream ;
+- cache Room local, rafraîchissement manuel et planifié ;
+- lecture Media3 / ExoPlayer (HLS, DASH, TS), pistes audio et sous-titres ;
+- EPG XMLTV lorsque la source le fournit ;
+- films, séries, reprise de lecture, favoris, profils et code PIN ;
+- page de configuration TV accessible par QR depuis un téléphone sur le même
+  Wi-Fi ;
+- accueil TV navigable à la télécommande ;
+- premier accueil tactile compact sur téléphone : recherche, Direct / Films /
+  Séries, liste de contenus et ouverture des réglages ;
+- le lecteur vidéo reste en paysage pendant la lecture ;
+- interface française pour les parcours importants sur un appareil configuré en
+  français.
+
+## Direction artistique Prism
+
+Source de référence locale historique : `Prism — planche DA.html` (fournie par
+l’utilisateur lors de la conception). La DA à reproduire :
+
+- fond noir `#000000`, dominant ;
+- nuage bleu discret en haut/gauche, nuage rouge discret en bas/droite ;
+- tuiles et panneaux : voile blanc à 8 % (`#14FFFFFF`) ;
+- retraits, séparateurs et focus de fond : voile blanc à 16 % (`#29FFFFFF`) ;
+- bleu d’accent : `#4D86FF`, réservé au focus et à la progression ;
+- texte principal `#F4F6F7`, texte secondaire `#B4BBD0` ;
+- logo : triangle « play » blanc facetté + mot `prism` en minuscules ;
+- éviter les petits traits verticaux latéraux de sélection ;
+- les nuages peuvent dériver très lentement, sans animation gourmande et en
+  respectant la réduction des animations quand elle est demandée.
+
+Les constantes sont dans :
+`app/src/main/java/nl/vanvrouwerff/iptv/ui/theme/Theme.kt`
+
+Le fond Canvas animé est dans :
+`app/src/main/java/nl/vanvrouwerff/iptv/ui/theme/PrismBackground.kt`
+
+## Architecture actuelle
+
+```text
+app/src/main/java/nl/vanvrouwerff/iptv/
+  MainActivity.kt           Routes Compose, bascule TV / mobile
+  player/                   Media3, PlayerActivity et overlays
+  data/
+    m3u/                    Parseur M3U
+    xtream/                 Client Xtream
+    epg/                    XMLTV
+    db/                     Room
+    settings/               DataStore + configuration QR LAN
+    repo/                   Rafraîchissement du catalogue
+  ui/
+    channels/               Accueil TV
+    mobile/                 Accueil compact tactile
+    settings/               Source, lecteur, profils, actualisation
+    guide/, detail/, ...    Écrans TV existants
+    theme/                  Palette et fond Prism
+```
+
+Le package Kotlin historique est encore `nl.vanvrouwerff.iptv` ; l’identifiant
+Android publié est déjà `fr.prisme.player`. Ne pas lancer une migration de
+package au milieu d’une autre fonctionnalité : faire ce chantier séparément.
+
+## Décisions déjà prises
+
+- La largeur inférieure à `600dp` utilise `MobileHomeScreen` ; les grands écrans
+  gardent `ChannelsScreen`, optimisé télécommande.
+- `MainActivity` n’est pas verrouillée en paysage afin que l’accueil fonctionne
+  sur téléphone. `PlayerActivity`, elle, reste en paysage.
+- L’accueil mobile lit le même cache Room que la TV. Il ne refait pas un import
+  réseau et ne crée pas de seconde base de données.
+- Le premier écran mobile transmet la liste filtrée au lecteur pour permettre le
+  zapping entre chaînes visibles.
+- Les réglages ont été rendus moins rigides : largeur maximale `720dp` et marge
+  latérale réduite sur téléphone.
+- La ressource `values-fr/strings.xml` couvre l’essentiel. Les libellés non
+  encore traduits retombent sur les anciennes valeurs néerlandaises : continuer
+  cette traduction plutôt que créer des textes en dur.
+
+## Ce qu’il reste à faire — ordre recommandé
+
+1. Tester sur une vraie TV Android et un téléphone Android avec une source de
+   test appartenant à l’utilisateur.
+2. Corriger les défauts de navigation, tailles et focus observés sur ces appareils.
+3. Finir l’interface tactile : fiches films/séries, guide, profils et réglages
+   spécifiquement mobiles ; ne pas simplement comprimer les écrans TV.
+4. Terminer la francisation dans `values-fr/strings.xml`, puis choisir si le
+   français doit devenir la langue par défaut.
+5. Refaire progressivement les écrans TV restants avec les composants Prism
+   (accueil, guide, fiches, réglages, lecteur) sans réintroduire les barres
+   latérales de focus.
+6. Extraire à terme les données/lecture dans un module `core` partagé avant de
+   multiplier les surfaces.
+7. Concevoir l’appairage TV ↔ téléphone : authentifié sur LAN, export chiffré
+   optionnel de configuration et bail de lecture unique. Ne pas présenter cela
+   comme un contournement de limite fournisseur.
+8. Ajouter des profils de qualité prudents : par défaut matériel ; désentrelacement
+   ou traitement léger uniquement si le matériel tient sans images perdues.
+
+## Vérification / compilation
+
+La machine ayant servi aux derniers commits n’a pas de SDK Android configuré.
+Les vérifications effectuées étaient `git diff --check` et la validation XML.
+Il ne faut pas affirmer que l’APK a compilé tant que cette commande n’a pas
+réussi sur une machine Android correctement configurée :
+
+```powershell
+.\gradlew.bat test --no-daemon --console=plain
+.\gradlew.bat assembleDebug --no-daemon --console=plain
+```
+
+Pré-requis : JDK 17 ou 21, SDK Android configuré via `ANDROID_HOME` ou
+`local.properties` (`sdk.dir=...`). Le fichier `local.properties` ne doit jamais
+être commité ; il peut contenir le chemin du SDK et, éventuellement, le jeton
+TMDB local.
+
+## Travail à plusieurs IA
+
+Avant de modifier :
+
+1. Lire ce fichier, `README.md` et `docs/ROADMAP.md`.
+2. Vérifier `git status --short` et ne pas écraser les modifications d’une autre
+   IA ou de l’utilisateur.
+3. Prendre un périmètre de fichiers distinct quand plusieurs IA travaillent en
+   parallèle. Exemples : une IA sur `ui/mobile`, une sur `values-fr`, une sur
+   les tests ou la documentation.
+4. Ne pas faire de `git reset --hard`, de checkout destructif, ni de migration
+   massive de package sans accord explicite.
+5. Finir chaque bloc par `git diff --check`, puis un commit petit et descriptif.
+6. Rapporter clairement ce qui a été vérifié et ce qui n’a pas pu l’être.
+
+## Liens utiles
+
+- Dépôt public : <https://github.com/UserNammy/prisme>
+- Roadmap : `docs/ROADMAP.md`
+- Prototype navigateur : `prototype/index.html`
+- Licence de la base importée : `LICENSE` et `NOTICE`
