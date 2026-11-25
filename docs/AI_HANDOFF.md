@@ -94,6 +94,16 @@ Le package Kotlin, le `namespace` Gradle et l’`applicationId` sont tous
 `fr.prisme.player` (migration depuis `nl.vanvrouwerff.iptv` faite). Le nom affiché
 est **Prism** partout ; « prisme » ne subsiste que dans l’identifiant technique.
 
+Décision du 25 novembre 2026 : on garde **Prism** (sans E) comme nom affiché, car
+le logo, la bannière TV et la planche DA sont dessinés autour de ce nom. Ne pas
+« corriger » vers Prisme. Ne jamais renommer non plus :
+
+- l’`applicationId` `fr.prisme.player` : Android y verrait une autre appli, les
+  installations existantes ne recevraient plus les mises à jour et il faudrait
+  tout reconfigurer ;
+- le dépôt GitHub `UserNammy/prisme` : la mise à jour intégrée y cherche les
+  versions (`UPDATE_REPO`).
+
 Le français est la langue par défaut (`values/strings.xml`), il n’y a plus de
 ressources néerlandaises. Les titres de rangées internes (`ChannelsUiState.CONTINUE_WATCHING`,
 etc.) sont des clés héritées en néerlandais : ne jamais les afficher directement,
