@@ -49,7 +49,7 @@ data class SettingsUiState(
 )
 
 /** Language choices offered for audio and subtitles, as ISO 639-1 codes ("" = no preference). */
-val LanguageChoices: List<String> = listOf("", "nl", "en", "de", "fr", "es", "it", "tr", "ar", "pl")
+val LanguageChoices: List<String> = listOf("", "fr", "en", "de", "es", "it", "nl", "ar", "tr", "pl")
 
 /** Aspect-ratio choices, matching the player's AspectMode names. */
 val AspectChoices: List<String> = listOf("FIT", "FILL", "ZOOM")

@@ -177,7 +177,7 @@ class SettingsStore(private val context: Context) {
 
     /** Player defaults. Aspect: "FIT" | "FILL" | "ZOOM". Languages: ISO 639-1, "" = no preference. */
     val playerAspect: Flow<String> = context.dataStore.data.map { it[PLAYER_ASPECT] ?: "FIT" }
-    val preferredAudioLanguage: Flow<String> = context.dataStore.data.map { it[AUDIO_LANGUAGE] ?: "" }
+    val preferredAudioLanguage: Flow<String> = context.dataStore.data.map { it[AUDIO_LANGUAGE] ?: DEFAULT_AUDIO_LANGUAGE }
     /** "" = no preference, "off" = subtitles off by default, else an ISO 639-1 code. */
     val preferredSubtitleLanguage: Flow<String> = context.dataStore.data.map { it[SUBTITLE_LANGUAGE] ?: "" }
 
@@ -271,6 +271,7 @@ class SettingsStore(private val context: Context) {
         const val RECENT_SEARCHES_MAX = 6
         const val DEFAULT_PROFILE_ID = "default"
         const val DEFAULT_AUTO_REFRESH_HOUR = 3
-        const val DEFAULT_CATEGORY_FILTER = "NL, UK, US, USA, EN"
+        const val DEFAULT_CATEGORY_FILTER = "FR, FRA"
+        const val DEFAULT_AUDIO_LANGUAGE = "fr"
     }
 }

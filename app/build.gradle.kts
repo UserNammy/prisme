@@ -26,10 +26,14 @@ android {
         applicationId = "fr.prisme.player"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        // CI passes VERSION_CODE (GitHub run number) so every published build is newer
+        // than the last one; the in-app updater compares against it.
+        versionCode = (System.getenv("VERSION_CODE") ?: localProps.getProperty("VERSION_CODE") ?: "1").toInt()
+        versionName = System.getenv("VERSION_NAME") ?: "0.1.0-dev"
 
         buildConfigField("String", "TMDB_BEARER_TOKEN", "\"$tmdbBearerToken\"")
+        // GitHub "owner/repo" whose releases the in-app updater follows. Empty disables it.
+        buildConfigField("String", "UPDATE_REPO", "\"${localProps.getProperty("UPDATE_REPO", "UserNammy/prisme")}\"")
     }
 
     signingConfigs {

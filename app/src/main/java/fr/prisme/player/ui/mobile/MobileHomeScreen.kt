@@ -266,4 +266,4 @@ private const val MOBILE_LIST_LIMIT = 250
 
 /** Escapes LIKE wildcards for the `ESCAPE '\'` clause used by ChannelDao.searchChannels. */
 private fun escapeLike(raw: String): String =
-    raw.replace("\\", "\\\\").replace("%", "\%").replace("_", "\_")
+    raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
