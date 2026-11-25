@@ -96,11 +96,12 @@ est **Prism** partout ; « prisme » ne subsiste que dans l’identifiant techni
 
 Décision du 25 novembre 2026 : on garde **Prism** (sans E) comme nom affiché, car
 le logo, la bannière TV et la planche DA sont dessinés autour de ce nom. Ne pas
-« corriger » vers Prisme. Ne jamais renommer non plus :
+« corriger » vers Prisme. Aucun appareil n’a encore Prism installé à cette date,
+mais dès la première installation il ne faudra jamais renommer :
 
 - l’`applicationId` `fr.prisme.player` : Android y verrait une autre appli, les
-  installations existantes ne recevraient plus les mises à jour et il faudrait
-  tout reconfigurer ;
+  appareils installés ne recevraient plus les mises à jour et il faudrait tout
+  reconfigurer ;
 - le dépôt GitHub `UserNammy/prisme` : la mise à jour intégrée y cherche les
   versions (`UPDATE_REPO`).
 
