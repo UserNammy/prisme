@@ -3,6 +3,7 @@
 .gradle/
 /build/
 /app/build/
+/baselineprofile/build/
 /captures/
 .externalNativeBuild/
 .cxx/
