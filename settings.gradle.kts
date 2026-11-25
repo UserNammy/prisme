@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Prisme"
+rootProject.name = "Prism"
 include(":app")

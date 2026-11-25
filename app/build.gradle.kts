@@ -17,12 +17,12 @@ val localProps: Properties = Properties().apply {
 val tmdbBearerToken: String = localProps.getProperty("TMDB_BEARER_TOKEN", "")
 
 android {
-    namespace = "nl.vanvrouwerff.iptv"
+    namespace = "fr.prisme.player"
     compileSdk = 34
 
     defaultConfig {
-        // The source package will be moved during the shared-core extraction.
-        // Keeping the new ID from day one means installs and future signing belong to Prisme.
+        // Kotlin package and applicationId are both fr.prisme.player.
+        // Keeping the new ID from day one means installs and future signing belong to Prism.
         applicationId = "fr.prisme.player"
         minSdk = 29
         targetSdk = 34
@@ -52,7 +52,7 @@ android {
         }
         release {
             // R8 + resource shrinking shave significant size off the APK and remove a chunk
-            // of dead code that would otherwise slow class loading on the Formuler. Rules
+            // of dead code that would otherwise slow class loading on low-end TV boxes. Rules
             // for serialization, Retrofit, Room, Media3, etc. live in proguard-rules.pro.
             isMinifyEnabled = true
             isShrinkResources = true
@@ -74,6 +74,9 @@ android {
         freeCompilerArgs += listOf(
             "-opt-in=androidx.tv.material3.ExperimentalTvMaterial3Api",
             "-opt-in=androidx.tv.foundation.ExperimentalTvFoundationApi",
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:stabilityConfigurationPath=" +
+                project.file("compose-stability.conf").absolutePath,
         )
     }
 
