@@ -540,10 +540,10 @@ private fun RailsView(
                     Button(
                         onClick = onStartManaging,
                         colors = androidx.tv.material3.ButtonDefaults.colors(
-                            containerColor = IptvPalette.SurfaceControl,
-                            contentColor = IptvPalette.TextPrimary,
-                            focusedContainerColor = IptvPalette.Accent,
-                            focusedContentColor = IptvPalette.BackgroundDeep,
+                            containerColor = PrismPalette.SurfaceControl,
+                            contentColor = PrismPalette.TextPrimary,
+                            focusedContainerColor = PrismPalette.Accent,
+                            focusedContentColor = PrismPalette.BackgroundDeep,
                         ),
                     ) {
                         Text(
