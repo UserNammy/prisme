@@ -1,8 +1,8 @@
-# Prisme — roadmap
+# Prism — roadmap
 
 ## Principle
 
-Prisme is a player only. It ships no playlist, channel, account or stream.
+Prism is a player only. It ships no playlist, channel, account or stream.
 Everything needed to play a source is stored on the user's own devices.
 
 ## First usable release
@@ -27,6 +27,6 @@ Everything needed to play a source is stored on the user's own devices.
 
 ## Explicit limits
 
-The app can coordinate one simultaneous playback between paired Prisme
+The app can coordinate one simultaneous playback between paired Prism
 devices. It cannot change a provider's stream-concurrency limit, nor bypass a
 portal or subscription tied to a MAC address.

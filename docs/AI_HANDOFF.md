@@ -29,7 +29,7 @@ agréable sur téléphone et visuellement fidèle à la direction artistique Pri
 
 ## État au dernier commit
 
-Dernier jalon : `ede6056` — **Add compact phone navigation and French UI**.
+Dernier jalon : passe de nommage (Prism, `fr.prisme.player`, français par défaut) et d’optimisation des performances. Testé jusqu’ici en émulateur uniquement.
 
 Fonctionnel dans la base existante :
 
@@ -64,15 +64,15 @@ l’utilisateur lors de la conception). La DA à reproduire :
   respectant la réduction des animations quand elle est demandée.
 
 Les constantes sont dans :
-`app/src/main/java/nl/vanvrouwerff/iptv/ui/theme/Theme.kt`
+`app/src/main/java/fr/prisme/player/ui/theme/Theme.kt`
 
 Le fond Canvas animé est dans :
-`app/src/main/java/nl/vanvrouwerff/iptv/ui/theme/PrismBackground.kt`
+`app/src/main/java/fr/prisme/player/ui/theme/PrismBackground.kt`
 
 ## Architecture actuelle
 
 ```text
-app/src/main/java/nl/vanvrouwerff/iptv/
+app/src/main/java/fr/prisme/player/
   MainActivity.kt           Routes Compose, bascule TV / mobile
   player/                   Media3, PlayerActivity et overlays
   data/
@@ -90,9 +90,14 @@ app/src/main/java/nl/vanvrouwerff/iptv/
     theme/                  Palette et fond Prism
 ```
 
-Le package Kotlin historique est encore `nl.vanvrouwerff.iptv` ; l’identifiant
-Android publié est déjà `fr.prisme.player`. Ne pas lancer une migration de
-package au milieu d’une autre fonctionnalité : faire ce chantier séparément.
+Le package Kotlin, le `namespace` Gradle et l’`applicationId` sont tous
+`fr.prisme.player` (migration depuis `nl.vanvrouwerff.iptv` faite). Le nom affiché
+est **Prism** partout ; « prisme » ne subsiste que dans l’identifiant technique.
+
+Le français est la langue par défaut (`values/strings.xml`), il n’y a plus de
+ressources néerlandaises. Les titres de rangées internes (`ChannelsUiState.CONTINUE_WATCHING`,
+etc.) sont des clés héritées en néerlandais : ne jamais les afficher directement,
+passer par `ui/RailTitles.kt` (`displayRailTitle`).
 
 ## Décisions déjà prises
 
@@ -106,9 +111,25 @@ package au milieu d’une autre fonctionnalité : faire ce chantier séparément
   zapping entre chaînes visibles.
 - Les réglages ont été rendus moins rigides : largeur maximale `720dp` et marge
   latérale réduite sur téléphone.
-- La ressource `values-fr/strings.xml` couvre l’essentiel. Les libellés non
-  encore traduits retombent sur les anciennes valeurs néerlandaises : continuer
-  cette traduction plutôt que créer des textes en dur.
+- Tous les textes sont dans `values/strings.xml` (français). Pas de texte en dur.
+
+## Règles de performance
+
+La cible est un boîtier TV modeste : l’accueil ne doit pas coûter de CPU/GPU au repos.
+
+- Une valeur animée en continu (Ken Burns, pulsation, zoom de focus) se lit dans la
+  phase de dessin : `Modifier.deferredScale { v }` / `deferredAlpha { v }`
+  (`ui/theme/Focus.kt`), jamais `Modifier.scale(v)` qui recompose tout l’écran à
+  chaque image.
+- Le fond `PrismBackground` met en cache ses dégradés et ne redessine que lorsque la
+  dérive bouge d’environ 1 px (≈ 3 fois par seconde) ; il reste fixe si les
+  animations système sont désactivées.
+- Ne jamais charger tout le catalogue dans un écran : filtrer, chercher et limiter en
+  SQL (`ChannelDao.observeChannelsByType`, `searchChannels`).
+- Un `Flow` passé à `collectAsState` doit être dans un `remember`, sinon la requête
+  Room redémarre à chaque recomposition.
+- `app/compose-stability.conf` déclare les collections Kotlin stables : l’état UI doit
+  donc toujours être reconstruit (copy), jamais muté sur place.
 
 ## Ce qu’il reste à faire — ordre recommandé
 
@@ -117,8 +138,8 @@ package au milieu d’une autre fonctionnalité : faire ce chantier séparément
 2. Corriger les défauts de navigation, tailles et focus observés sur ces appareils.
 3. Finir l’interface tactile : fiches films/séries, guide, profils et réglages
    spécifiquement mobiles ; ne pas simplement comprimer les écrans TV.
-4. Terminer la francisation dans `values-fr/strings.xml`, puis choisir si le
-   français doit devenir la langue par défaut.
+4. La francisation est faite (français par défaut) ; garder tout nouveau texte
+   dans `values/strings.xml`, jamais en dur.
 5. Refaire progressivement les écrans TV restants avec les composants Prism
    (accueil, guide, fiches, réglages, lecteur) sans réintroduire les barres
    latérales de focus.
@@ -157,7 +178,7 @@ Avant de modifier :
 2. Vérifier `git status --short` et ne pas écraser les modifications d’une autre
    IA ou de l’utilisateur.
 3. Prendre un périmètre de fichiers distinct quand plusieurs IA travaillent en
-   parallèle. Exemples : une IA sur `ui/mobile`, une sur `values-fr`, une sur
+   parallèle. Exemples : une IA sur `ui/mobile`, une sur `values/strings.xml`, une sur
    les tests ou la documentation.
 4. Ne pas faire de `git reset --hard`, de checkout destructif, ni de migration
    massive de package sans accord explicite.
