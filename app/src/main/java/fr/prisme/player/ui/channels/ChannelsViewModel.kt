@@ -102,7 +102,7 @@ data class ChannelsUiState(
     val managingFavorites: Boolean = false,
     val recentSearches: List<String> = emptyList(),
     /** Hero trailers autoplay (Instellingen → Weergave). */
-    val trailersAutoplay: Boolean = true,
+    val trailersAutoplay: Boolean = false,
     val error: String? = null,
     /**
      * Channels with `streamUrl != null`, derived once per channels-update so click handlers

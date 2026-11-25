@@ -8,7 +8,22 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.doublePreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
@@ -144,12 +159,20 @@ class SettingsStore(private val context: Context) {
     val autoRefreshHour: Flow<Int> =
         context.dataStore.data.map { (it[AUTO_REFRESH_HOUR] ?: DEFAULT_AUTO_REFRESH_HOUR).coerceIn(0, 23) }
 
-    /** Hero trailers start by themselves after a short idle; users on slow boxes can opt out. */
+    /** Hero trailers (YouTube WebView) are heavy on TV boxes: opt-in only. */
     val trailersAutoplay: Flow<Boolean> =
-        context.dataStore.data.map { it[TRAILERS_AUTOPLAY] ?: true }
+        context.dataStore.data.map { it[TRAILERS_AUTOPLAY] ?: false }
 
     suspend fun setTrailersAutoplay(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[TRAILERS_AUTOPLAY] = enabled }
+    }
+
+    /** Open the last watched live channel straight away when the app starts. */
+    val resumeLastChannelOnStart: Flow<Boolean> =
+        context.dataStore.data.map { it[RESUME_LAST_CHANNEL] ?: false }
+
+    suspend fun setResumeLastChannelOnStart(enabled: Boolean) {
+        context.dataStore.edit { prefs -> prefs[RESUME_LAST_CHANNEL] = enabled }
     }
 
     /** Four-digit parental PIN; empty when none is set. */
@@ -177,7 +200,7 @@ class SettingsStore(private val context: Context) {
 
     /** Player defaults. Aspect: "FIT" | "FILL" | "ZOOM". Languages: ISO 639-1, "" = no preference. */
     val playerAspect: Flow<String> = context.dataStore.data.map { it[PLAYER_ASPECT] ?: "FIT" }
-    val preferredAudioLanguage: Flow<String> = context.dataStore.data.map { it[AUDIO_LANGUAGE] ?: "" }
+    val preferredAudioLanguage: Flow<String> = context.dataStore.data.map { it[AUDIO_LANGUAGE] ?: DEFAULT_AUDIO_LANGUAGE }
     /** "" = no preference, "off" = subtitles off by default, else an ISO 639-1 code. */
     val preferredSubtitleLanguage: Flow<String> = context.dataStore.data.map { it[SUBTITLE_LANGUAGE] ?: "" }
 
@@ -235,6 +258,58 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    /**
+     * Every user setting as typed JSON (`{"key": {"t": "s", "v": "..."}}`), for the backup
+     * file. Sync bookkeeping (ETags, last refresh times, catalogue version) is left out so
+     * a restore triggers a fresh download of the catalogue.
+     */
+    suspend fun exportForBackup(): JsonObject {
+        val prefs = context.dataStore.data.first().asMap()
+        return buildJsonObject {
+            for ((key, value) in prefs) {
+                if (key.name in BACKUP_EXCLUDED) continue
+                val typed: Pair<String, JsonElement> = when (value) {
+                    is Boolean -> "b" to JsonPrimitive(value)
+                    is Int -> "i" to JsonPrimitive(value)
+                    is Long -> "l" to JsonPrimitive(value)
+                    is Float -> "f" to JsonPrimitive(value)
+                    is Double -> "d" to JsonPrimitive(value)
+                    is String -> "s" to JsonPrimitive(value)
+                    is Set<*> -> "ss" to JsonArray(value.map { JsonPrimitive(it.toString()) })
+                    else -> continue
+                }
+                put(key.name, buildJsonObject {
+                    put("t", JsonPrimitive(typed.first))
+                    put("v", typed.second)
+                })
+            }
+        }
+    }
+
+    suspend fun restoreFromBackup(saved: JsonObject) {
+        context.dataStore.edit { prefs ->
+            for ((name, entry) in saved) {
+                if (name in BACKUP_EXCLUDED) continue
+                val obj = entry as? JsonObject ?: continue
+                val v = obj["v"] ?: continue
+                when (obj["t"]?.jsonPrimitive?.content) {
+                    "b" -> v.jsonPrimitive.booleanOrNull?.let { prefs[booleanPreferencesKey(name)] = it }
+                    "i" -> v.jsonPrimitive.intOrNull?.let { prefs[intPreferencesKey(name)] = it }
+                    "l" -> v.jsonPrimitive.longOrNull?.let { prefs[longPreferencesKey(name)] = it }
+                    "f" -> v.jsonPrimitive.floatOrNull?.let { prefs[floatPreferencesKey(name)] = it }
+                    "d" -> v.jsonPrimitive.doubleOrNull?.let { prefs[doublePreferencesKey(name)] = it }
+                    "s" -> prefs[stringPreferencesKey(name)] = v.jsonPrimitive.content
+                    "ss" -> (v as? JsonArray)?.let { arr ->
+                        prefs[stringSetPreferencesKey(name)] = arr.map { it.jsonPrimitive.content }.toSet()
+                    }
+                }
+            }
+            for (key in listOf(PLAYLIST_ETAG, PLAYLIST_LAST_MODIFIED)) prefs.remove(key)
+            prefs.remove(LAST_REFRESH_AT)
+            prefs.remove(LAST_EPG_REFRESH_AT)
+        }
+    }
+
     suspend fun savePlaylistValidators(etag: String?, lastModified: String?) {
         context.dataStore.edit { prefs ->
             if (etag != null) prefs[PLAYLIST_ETAG] = etag else prefs.remove(PLAYLIST_ETAG)
@@ -258,6 +333,7 @@ class SettingsStore(private val context: Context) {
         val ACTIVE_PROFILE_ID = stringPreferencesKey("active_profile_id")
         val AUTO_REFRESH_ENABLED = booleanPreferencesKey("auto_refresh_enabled")
         val TRAILERS_AUTOPLAY = booleanPreferencesKey("trailers_autoplay")
+        val RESUME_LAST_CHANNEL = booleanPreferencesKey("resume_last_channel")
         val HARDWARE_AV_SYNC = booleanPreferencesKey("hardware_av_sync")
         val PARENTAL_PIN = stringPreferencesKey("parental_pin")
         val FRAME_RATE_MATCHING = booleanPreferencesKey("frame_rate_matching")
@@ -271,6 +347,11 @@ class SettingsStore(private val context: Context) {
         const val RECENT_SEARCHES_MAX = 6
         const val DEFAULT_PROFILE_ID = "default"
         const val DEFAULT_AUTO_REFRESH_HOUR = 3
-        const val DEFAULT_CATEGORY_FILTER = "NL, UK, US, USA, EN"
+        const val DEFAULT_CATEGORY_FILTER = "FR, FRA"
+        const val DEFAULT_AUDIO_LANGUAGE = "fr"
+        val BACKUP_EXCLUDED = setOf(
+            "playlist_etag", "playlist_last_modified", "last_refresh_at",
+            "last_epg_refresh_at", "catalogue_version", "last_profile_session_at",
+        )
     }
 }

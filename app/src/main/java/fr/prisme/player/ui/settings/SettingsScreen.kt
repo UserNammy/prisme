@@ -92,6 +92,12 @@ fun SettingsScreen(
                     onToggle = { vm.setTrailersAutoplay(!state.trailersAutoplay) },
                 )
                 SwitchRow(
+                    title = stringResource(R.string.settings_resume_last_title),
+                    body = stringResource(R.string.settings_resume_last_body),
+                    checked = state.resumeLastChannel,
+                    onToggle = { vm.setResumeLastChannel(!state.resumeLastChannel) },
+                )
+                SwitchRow(
                     title = stringResource(R.string.settings_av_sync_title),
                     body = stringResource(R.string.settings_av_sync_body),
                     checked = state.hardwareAvSync,
@@ -208,6 +214,12 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            SettingsSection(title = stringResource(R.string.update_section_title)) {
+                UpdateSection()
+            }
+
+            BackupSection()
 
             // About + required attributions. The TMDB disclaimer wording is dictated by
             // their API terms of use.
@@ -361,7 +373,7 @@ private fun formatCount(n: Int): String =
     java.text.NumberFormat.getIntegerInstance(java.util.Locale("nl", "NL")).format(n)
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = title,
