@@ -319,4 +319,28 @@
     <string name="reminder_now">A commencé à %1$s</string>
     <string name="reminder_set">Rappel créé : %1$s à %2$s</string>
     <string name="reminder_removed">Rappel supprimé</string>
+    <!-- Paramètre : démarrage -->
+    <string name="settings_resume_last_title">Reprendre la dernière chaîne</string>
+    <string name="settings_resume_last_body">Au lancement, ouvre directement la dernière chaîne en direct regardée.</string>
+    <!-- Mises à jour -->
+    <string name="update_section_title">Mises à jour</string>
+    <string name="update_current_version">Version installée : %1$s (%2$d)</string>
+    <string name="update_check_now">Rechercher une mise à jour</string>
+    <string name="update_checking">Recherche en cours…</string>
+    <string name="update_up_to_date">Prism est à jour.</string>
+    <string name="update_available_title">Mise à jour disponible</string>
+    <string name="update_available_body">La version %1$s de Prism est prête à être installée.</string>
+    <string name="update_install">Installer</string>
+    <string name="update_later">Plus tard</string>
+    <string name="update_downloading">Téléchargement : %1$d %%</string>
+    <string name="update_downloading_body">Android va ensuite demander de confirmer l’installation.</string>
+    <string name="update_installing">Confirmez l’installation à l’écran.</string>
+    <string name="update_permission_title">Autorisation nécessaire</string>
+    <string name="update_permission_body">Autorisez Prism à installer des applications, revenez puis relancez la mise à jour.</string>
+    <string name="update_failed_title">Mise à jour impossible</string>
+    <string name="update_close">Fermer</string>
+    <!-- Sauvegarde -->
+    <string name="backup_section_title">Sauvegarde</string>
+    <string name="backup_section_body">Scannez ce QR code avec votre téléphone (même Wi-Fi), puis utilisez la partie « Sauvegarde » de la page pour télécharger ou restaurer la configuration : source, profils, favoris et reprises de lecture.</string>
+    <string name="backup_restored">Sauvegarde restaurée. Le catalogue se recharge.</string>
 </resources>

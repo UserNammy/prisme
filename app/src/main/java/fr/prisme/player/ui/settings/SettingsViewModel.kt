@@ -35,7 +35,8 @@ data class SettingsUiState(
     val refreshError: String? = null,
     val autoRefreshEnabled: Boolean = false,
     val autoRefreshHour: Int = 3,
-    val trailersAutoplay: Boolean = true,
+    val trailersAutoplay: Boolean = false,
+    val resumeLastChannel: Boolean = false,
     val hardwareAvSync: Boolean = true,
     val frameRateMatching: Boolean = true,
     val parentalPinSet: Boolean = false,
@@ -86,6 +87,7 @@ class SettingsViewModel : ViewModel() {
                     autoRefreshEnabled = app.settings.autoRefreshEnabled.first(),
                     autoRefreshHour = app.settings.autoRefreshHour.first(),
                     trailersAutoplay = app.settings.trailersAutoplay.first(),
+                    resumeLastChannel = app.settings.resumeLastChannelOnStart.first(),
                     hardwareAvSync = app.settings.hardwareAvSync.first(),
                     frameRateMatching = app.settings.frameRateMatching.first(),
                     parentalPinSet = app.settings.parentalPin.first().isNotEmpty(),
@@ -163,6 +165,11 @@ class SettingsViewModel : ViewModel() {
     fun setTrailersAutoplay(enabled: Boolean) {
         _state.update { it.copy(trailersAutoplay = enabled) }
         viewModelScope.launch { app.settings.setTrailersAutoplay(enabled) }
+    }
+
+    fun setResumeLastChannel(enabled: Boolean) {
+        _state.update { it.copy(resumeLastChannel = enabled) }
+        viewModelScope.launch { app.settings.setResumeLastChannelOnStart(enabled) }
     }
 
     fun setParentalPin(pin: String) {

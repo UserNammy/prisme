@@ -49,6 +49,7 @@ import fr.prisme.player.ui.mobile.MobileHomeScreen
 import fr.prisme.player.ui.mobile.MobileGuideScreen
 import fr.prisme.player.ui.mobile.MobileProfilesScreen
 import fr.prisme.player.ui.reminders.ReminderHost
+import fr.prisme.player.ui.update.UpdateHost
 import fr.prisme.player.ui.settings.SettingsScreen
 import fr.prisme.player.ui.splash.SplashScreen
 import fr.prisme.player.ui.theme.PrismTheme
@@ -68,7 +69,28 @@ class MainActivity : ComponentActivity() {
                         onPlayDirect = ::onPlayDirect,
                     )
                     ReminderHost(onWatch = ::openLiveChannel)
+                    UpdateHost()
                 }
+            }
+        }
+        if (savedInstanceState == null) resumeLastChannelIfEnabled()
+    }
+
+    /**
+     * Optional "TV-like" start: jump straight into the last live channel watched by the
+     * active profile. Back from the player lands on the normal home screen.
+     */
+    private fun resumeLastChannelIfEnabled() {
+        lifecycleScope.launch {
+            val app = PrismApp.get()
+            if (!app.settings.resumeLastChannelOnStart.first()) return@launch
+            if (app.settings.sourceConfig.first() == null) return@launch
+            val profileId = app.settings.activeProfileId.first()
+            val channelId = app.settings.lastWatchedChannelId(profileId).first() ?: return@launch
+            val channel = app.database.channelDao().getChannelsByIds(listOf(channelId)).firstOrNull()
+                ?: return@launch
+            if (channel.type == ContentType.TV.name && !channel.streamUrl.isNullOrBlank()) {
+                openLiveChannel(channelId)
             }
         }
     }

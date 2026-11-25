@@ -25,6 +25,7 @@ import fr.prisme.player.data.tmdb.TmdbHeroPreloader
 import fr.prisme.player.data.tmdb.TmdbMovieDetailsRepository
 import fr.prisme.player.data.tmdb.TmdbPopularRepository
 import fr.prisme.player.data.update.AppUpdater
+import fr.prisme.player.data.backup.BackupManager
 
 /**
  * Poor man's DI. For a weekend-sized project a handful of lazy singletons beats
@@ -49,6 +50,7 @@ class PrismApp : Application(), ImageLoaderFactory {
         TmdbMovieDetailsRepository()
     }
     val updater: AppUpdater by lazy { AppUpdater(this) }
+    val backup: BackupManager by lazy { BackupManager(database, settings) }
 
     val tmdbHeroPreloader: TmdbHeroPreloader by lazy {
         TmdbHeroPreloader(tmdbMovieDetails)
