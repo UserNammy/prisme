@@ -142,6 +142,9 @@ dependencies {
 
     implementation(libs.youtube.player.core)
     implementation(libs.zxing.core)
+    // Applies the baseline profiles shipped by Compose/Media3 (and ours, later) on sideloaded
+    // installs, which never get Play cloud profiles: faster start and scrolling on TV boxes.
+    implementation(libs.profileinstaller)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

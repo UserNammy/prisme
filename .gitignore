@@ -23,3 +23,8 @@ local.properties
 
 # macOS
 .DS_Store
+
+# Release signing key — never commit
+*.jks
+*.keystore
+/dist/

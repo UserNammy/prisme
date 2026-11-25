@@ -1,0 +1,95 @@
+name: Android
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      # Monotonic versionCode so in-app updates always see a newer build.
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION_NAME=0.0.${VERSION_CODE}-dev" >> "$GITHUB_ENV"
+          fi
+
+      - name: Release signing key
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          TMDB_BEARER_TOKEN: ${{ secrets.TMDB_BEARER_TOKEN }}
+        run: |
+          : > local.properties
+          if [ -n "$TMDB_BEARER_TOKEN" ]; then
+            echo "TMDB_BEARER_TOKEN=$TMDB_BEARER_TOKEN" >> local.properties
+          fi
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > release.jks
+            {
+              echo "RELEASE_STORE_FILE=release.jks"
+              echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
+              echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
+              echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
+            } >> local.properties
+            echo "SIGNED=true" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Pas de clé de signature (secrets RELEASE_*) : APK signé avec une clé jetable, non installable par-dessus une version signée."
+            echo "SIGNED=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Tests
+        run: ./gradlew testDebugUnitTest --no-daemon --console=plain
+
+      - name: APK release
+        run: ./gradlew assembleRelease --no-daemon --console=plain
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/prism-${VERSION_CODE}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prism-${{ env.VERSION_CODE }}
+          path: dist/*.apk
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$SIGNED" != "true" ]; then
+            echo "::error::Publication refusée : configure d'abord les secrets RELEASE_* (voir docs/RELEASE.md)."
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/*.apk \
+            --title "Prism $VERSION_NAME" \
+            --generate-notes
