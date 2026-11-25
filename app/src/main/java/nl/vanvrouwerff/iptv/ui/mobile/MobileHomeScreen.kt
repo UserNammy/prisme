@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LiveTv
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Tv
@@ -29,6 +31,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +64,8 @@ import nl.vanvrouwerff.iptv.ui.theme.IptvPalette
 @Composable
 fun MobileHomeScreen(
     onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
+    onOpenProfiles: () -> Unit,
     onPlay: (Channel, List<Channel>) -> Unit,
     onOpenDetail: (Channel) -> Unit,
 ) {
@@ -76,13 +82,16 @@ fun MobileHomeScreen(
             .toList()
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(IptvPalette.BackgroundDeep.copy(alpha = 0.78f)),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -145,6 +154,33 @@ fun MobileHomeScreen(
                     },
                 )
             }
+        }
+        }
+        NavigationBar(containerColor = IptvPalette.SurfaceLift) {
+            NavigationBarItem(
+                selected = true,
+                onClick = {},
+                icon = { Icon(Icons.Outlined.Home, null) },
+                label = { Text(stringResource(R.string.mobile_home)) },
+            )
+            NavigationBarItem(
+                selected = false,
+                onClick = onOpenGuide,
+                icon = { Icon(Icons.Outlined.LiveTv, null) },
+                label = { Text(stringResource(R.string.mobile_guide)) },
+            )
+            NavigationBarItem(
+                selected = false,
+                onClick = onOpenProfiles,
+                icon = { Icon(Icons.Outlined.Person, null) },
+                label = { Text(stringResource(R.string.mobile_profiles)) },
+            )
+            NavigationBarItem(
+                selected = false,
+                onClick = onOpenSettings,
+                icon = { Icon(Icons.Outlined.Settings, null) },
+                label = { Text(stringResource(R.string.mobile_settings)) },
+            )
         }
     }
 }

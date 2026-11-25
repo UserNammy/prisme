@@ -66,7 +66,7 @@ fun SettingsScreen(
     // remote BACK key is no longer a no-op on this screen.
     BackHandler(enabled = true, onBack = onBack)
 
-    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep)) {
+    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f))) {
         // Scrollable: on a 1080p TV (960×540 dp) the lower sections don't fit otherwise.
         Column(
             modifier = Modifier

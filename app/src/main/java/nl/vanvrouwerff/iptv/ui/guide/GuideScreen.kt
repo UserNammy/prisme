@@ -72,7 +72,7 @@ fun GuideScreen(
     val state by vm.state.collectAsState()
     BackHandler(enabled = true, onBack = onBack)
 
-    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep)) {
+    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f))) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

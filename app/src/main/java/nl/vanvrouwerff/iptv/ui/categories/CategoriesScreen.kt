@@ -78,7 +78,7 @@ fun CategoriesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(IptvPalette.BackgroundDeep)
+            .background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f))
             .padding(horizontal = 48.dp, vertical = 24.dp),
     ) {
         Text(

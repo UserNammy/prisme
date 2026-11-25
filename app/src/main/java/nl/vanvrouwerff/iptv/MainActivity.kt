@@ -46,6 +46,8 @@ import nl.vanvrouwerff.iptv.ui.seriesdetail.SeriesSeason
 import nl.vanvrouwerff.iptv.ui.profilepicker.ProfilePickerScreen
 import nl.vanvrouwerff.iptv.ui.profiles.ProfilesScreen
 import nl.vanvrouwerff.iptv.ui.mobile.MobileHomeScreen
+import nl.vanvrouwerff.iptv.ui.mobile.MobileGuideScreen
+import nl.vanvrouwerff.iptv.ui.mobile.MobileProfilesScreen
 import nl.vanvrouwerff.iptv.ui.reminders.ReminderHost
 import nl.vanvrouwerff.iptv.ui.settings.SettingsScreen
 import nl.vanvrouwerff.iptv.ui.splash.SplashScreen
@@ -322,7 +324,10 @@ private fun AppRouteHost(
                 onBack = onBack,
                 onOpenProfiles = { onNavigate(Route.Profiles) },
             )
-            Route.Profiles -> ProfilesScreen(
+            Route.Profiles -> if (isCompactDevice) MobileProfilesScreen(
+                onBack = onBack,
+                onPicked = { onNavigate(Route.Channels) },
+            ) else ProfilesScreen(
                 onBack = onBack,
                 onPicked = { onNavigate(Route.Channels) },
             )
@@ -333,6 +338,8 @@ private fun AppRouteHost(
             Route.Channels -> if (isCompactDevice) {
                 MobileHomeScreen(
                     onOpenSettings = { onNavigate(Route.Settings) },
+                    onOpenGuide = { onNavigate(Route.Guide) },
+                    onOpenProfiles = { onNavigate(Route.Profiles) },
                     onPlay = { channel, scope -> onPlay(channel, scope, 0L) },
                     onOpenDetail = { channel ->
                         when (channel.type) {
@@ -387,7 +394,10 @@ private fun AppRouteHost(
                 onUnlocked = { onReplace(route.target) },
                 onCancel = onBack,
             )
-            Route.Guide -> GuideScreen(
+            Route.Guide -> if (isCompactDevice) MobileGuideScreen(
+                onBack = onBack,
+                onPlay = { channel, scope -> onPlay(channel, scope, 0L) },
+            ) else GuideScreen(
                 onBack = onBack,
                 onPlay = { channel, list -> onPlay(channel, list, 0L) },
                 onPlayItem = onPlayDirect,

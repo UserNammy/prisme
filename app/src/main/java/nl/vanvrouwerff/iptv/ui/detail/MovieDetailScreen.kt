@@ -86,7 +86,7 @@ fun MovieDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(IptvPalette.BackgroundDeep),
+            .background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f)),
     ) {
         val channel = state.channel ?: preview?.takeIf { it.id == channelId }
         when {

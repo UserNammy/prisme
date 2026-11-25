@@ -75,7 +75,7 @@ fun DetailScaffold(
         label = "detail-ken-burns-scale",
     )
 
-    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep)) {
+    Box(modifier = Modifier.fillMaxSize().background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f))) {
         if (backdropUrl != null) {
             AsyncImage(
                 model = backdropUrl,
@@ -185,7 +185,7 @@ fun TvLazyListScope.detailSection(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(IptvPalette.BackgroundDeep)
+                .background(IptvPalette.BackgroundDeep.copy(alpha = 0.80f))
                 .padding(start = DETAIL_H_PADDING, end = DETAIL_H_PADDING, top = 20.dp, bottom = 8.dp),
         ) {
             Text(

@@ -9,6 +9,10 @@
     <string name="mobile_series">Séries</string>
     <string name="mobile_empty_library">Aucun résultat dans votre bibliothèque.</string>
     <string name="mobile_uncategorized">Sans catégorie</string>
+    <string name="mobile_home">Accueil</string>
+    <string name="mobile_guide">Guide</string>
+    <string name="mobile_profiles">Profils</string>
+    <string name="mobile_profiles_hint">Choisissez le profil à utiliser sur cet appareil.</string>
 
     <string name="nav_channels">Kanalen</string>
     <string name="nav_settings">Instellingen</string>
