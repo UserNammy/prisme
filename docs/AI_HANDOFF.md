@@ -124,8 +124,10 @@ package au milieu d’une autre fonctionnalité : faire ce chantier séparément
    latérales de focus.
 6. Extraire à terme les données/lecture dans un module `core` partagé avant de
    multiplier les surfaces.
-7. Concevoir l’appairage TV ↔ téléphone : authentifié sur LAN, export chiffré
-   optionnel de configuration et bail de lecture unique. Ne pas présenter cela
+7. Brancher l’appairage TV ↔ téléphone sur le transport LAN : le cœur de bail
+   unique expirant est maintenant dans `data/pairing/SinglePlaybackLease.kt` et
+   couvert par test. Il manque l’authentification QR, le stockage chiffré des
+   pairs et les endpoints LAN qui l’appelleront. Ne jamais présenter ce système
    comme un contournement de limite fournisseur.
 8. Ajouter des profils de qualité prudents : par défaut matériel ; désentrelacement
    ou traitement léger uniquement si le matériel tient sans images perdues.

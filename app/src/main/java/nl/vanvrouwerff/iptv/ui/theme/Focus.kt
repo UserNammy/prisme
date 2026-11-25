@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
  * "selected + focused" always look different.
  */
 object FocusStyle {
-    val Fill = Color(0xFF3B3F4C)
+    /** Prism "voile fort" — focus uses light and scale, never decorative side bars. */
+    val Fill = IptvPalette.SurfaceElevated
     val Border = IptvPalette.TextPrimary
     const val RowScale = 1.02f
     const val ChipScale = 1.06f

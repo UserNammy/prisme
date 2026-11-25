@@ -4,11 +4,13 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -48,8 +51,9 @@ fun PhoneSetupPanel(qrSize: Dp = 150.dp, modifier: Modifier = Modifier) {
         onDispose { PhoneSetupServer.stop() }
     }
     val qr = remember(url) { url?.let { encodeQr(it) } }
+    val compact = LocalConfiguration.current.screenWidthDp < 600
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    val qrImage: @Composable () -> Unit = {
         if (qr != null) {
             Image(
                 bitmap = qr,
@@ -61,8 +65,9 @@ fun PhoneSetupPanel(qrSize: Dp = 150.dp, modifier: Modifier = Modifier) {
                     .background(Color.White)
                     .padding(8.dp),
             )
-            Spacer(Modifier.width(20.dp))
         }
+    }
+    val copy: @Composable () -> Unit = {
         Column {
             Text(
                 text = stringResource(R.string.phone_setup_title),
@@ -73,7 +78,7 @@ fun PhoneSetupPanel(qrSize: Dp = 150.dp, modifier: Modifier = Modifier) {
                 text = if (url != null) stringResource(R.string.phone_setup_body) else stringResource(R.string.phone_setup_offline),
                 style = MaterialTheme.typography.bodySmall,
                 color = IptvPalette.TextSecondary,
-                modifier = Modifier.width(360.dp),
+                modifier = Modifier.widthIn(max = 360.dp).fillMaxWidth(),
             )
             url?.let {
                 Text(
@@ -83,6 +88,18 @@ fun PhoneSetupPanel(qrSize: Dp = 150.dp, modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
+        }
+    }
+    if (compact) {
+        Column(modifier = modifier, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
+            qrImage()
+            copy()
+        }
+    } else {
+        Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+            qrImage()
+            if (qr != null) Spacer(Modifier.width(20.dp))
+            copy()
         }
     }
 }
