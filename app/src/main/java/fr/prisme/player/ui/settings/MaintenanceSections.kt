@@ -53,7 +53,7 @@ internal fun UpdateSection() {
             )
         }
     } else {
-        Button(onClick = { scope.launch { updater.check(userInitiated = true) } }) {
+        Button(onClick = { scope.launch { updater.checkNow(userInitiated = true) } }) {
             Text(
                 stringResource(R.string.update_check_now),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),

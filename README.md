@@ -23,6 +23,11 @@ appareils.
 - **Configuration depuis le téléphone** : la TV affiche un QR code qui ouvre une
   petite page servie localement sur le Wi-Fi de la maison (aucun cloud).
 - **TMDB (optionnel)** : affiches, résumés, bandes-annonces et « Top 10 ».
+- **Mises à jour intégrées** : l'appli propose elle-même les nouvelles versions
+  publiées sur GitHub (voir [`docs/RELEASE.md`](docs/RELEASE.md)).
+- **Sauvegarde / restauration** depuis le téléphone : source, profils, favoris et
+  reprises de lecture dans un fichier.
+- **Démarrage façon TV** (option) : reprend directement la dernière chaîne regardée.
 
 ## Compiler
 

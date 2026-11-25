@@ -81,10 +81,10 @@ class AppUpdater(private val context: Context) {
         if (BuildConfig.DEBUG || BuildConfig.UPDATE_REPO.isBlank()) return
         val last = prefs.getLong(KEY_LAST_CHECK, 0L)
         if (System.currentTimeMillis() - last < CHECK_INTERVAL_MS) return
-        check(userInitiated = false)
+        checkNow(userInitiated = false)
     }
 
-    suspend fun check(userInitiated: Boolean = true) {
+    suspend fun checkNow(userInitiated: Boolean = true) {
         if (BuildConfig.UPDATE_REPO.isBlank()) return
         if (_state.value is UpdateState.Downloading || _state.value is UpdateState.Installing) return
         _state.value = UpdateState.Checking

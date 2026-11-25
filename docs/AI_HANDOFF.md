@@ -112,6 +112,21 @@ passer par `ui/RailTitles.kt` (`displayRailTitle`).
 - Les réglages ont été rendus moins rigides : largeur maximale `720dp` et marge
   latérale réduite sur téléphone.
 - Tous les textes sont dans `values/strings.xml` (français). Pas de texte en dur.
+- Défauts pensés pour un foyer français : filtre de catégories Xtream `FR, FRA`,
+  langue audio préférée `fr`, bandes-annonces de l’accueil désactivées (lecteur
+  YouTube trop lourd pour un petit boîtier, activables dans Réglages).
+- **Mises à jour** : `data/update/AppUpdater.kt` lit la dernière release GitHub
+  (`BuildConfig.UPDATE_REPO`), compare `prism-<versionCode>.apk` à
+  `BuildConfig.VERSION_CODE` et installe via `PackageInstaller`. Vérification au
+  démarrage au plus toutes les 6 h (jamais en debug), fenêtre `ui/update/UpdatePrompt.kt`.
+  Procédure de publication : `docs/RELEASE.md`.
+- **Sauvegarde** : `data/backup/BackupManager.kt` exporte les réglages DataStore et
+  les tables utilisateur (profils, favoris, listes, reprises, rappels), pas le
+  catalogue. Transport par la page téléphone (`PhoneSetupServer` : `/<jeton>/backup`
+  et `POST /<jeton>/restore`), car les boîtiers TV n’ont souvent pas de sélecteur de
+  fichiers. Toute nouvelle table utilisateur doit être ajoutée à `USER_TABLES`.
+- Option « Reprendre la dernière chaîne » (désactivée par défaut) : `MainActivity`
+  ouvre la dernière chaîne en direct du profil actif au démarrage à froid.
 
 ## Règles de performance
 
@@ -155,10 +170,11 @@ La cible est un boîtier TV modeste : l’accueil ne doit pas coûter de CPU/GPU
 
 ## Vérification / compilation
 
-La machine ayant servi aux derniers commits n’a pas de SDK Android configuré.
-Les vérifications effectuées étaient `git diff --check` et la validation XML.
-Il ne faut pas affirmer que l’APK a compilé tant que cette commande n’a pas
-réussi sur une machine Android correctement configurée :
+GitHub Actions (`.github/workflows/android.yml`) lance les tests unitaires et
+compile l’APK release à chaque push ; l’APK est téléchargeable dans l’onglet
+Actions. Un tag `v*` publie en plus une release (signée, voir `docs/RELEASE.md`).
+Ne pas affirmer qu’un changement compile sans une CI verte ou une compilation
+locale réussie :
 
 ```powershell
 .\gradlew.bat test --no-daemon --console=plain
