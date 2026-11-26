@@ -37,6 +37,11 @@ Fonctionnel dans la base existante :
   le stockage privé de l’appli : `LocalPlaylist`) et Xtream ;
 - cache Room local, rafraîchissement manuel et planifié ;
 - lecture Media3 / ExoPlayer (HLS, DASH, TS), pistes audio et sous-titres ;
+- entrées YouTube et pages web (`player/WebChannel.kt`, `WebChannelLayer.kt`) :
+  YouTube via le lecteur IFrame officiel (origine `https://<package>` exigée par
+  YouTube depuis 2025), pages en WebView plein écran ; une adresse qu'ExoPlayer ne
+  reconnaît pas comme média (HTML) bascule automatiquement en page. Ne jamais
+  extraire le flux brut de YouTube ;
 - EPG XMLTV lorsque la source le fournit ;
 - films, séries, reprise de lecture, favoris, profils et code PIN ;
 - page de configuration TV accessible par QR depuis un téléphone sur le même

@@ -24,6 +24,10 @@ appareils.
   petite page servie localement sur le Wi-Fi de la maison (aucun cloud).
 - **Fichier M3U personnel** : la même page envoie un fichier `.m3u` du téléphone
   vers la TV, qui le garde uniquement en local et l'utilise comme source.
+- **Liens YouTube et pages web** dans une liste : les vidéos et directs YouTube
+  passent par le lecteur YouTube officiel intégré, les pages s'ouvrent en plein
+  écran (◀▲▼▶ pour naviguer, CH+/CH− pour zapper). Rien n'est chargé tant qu'on
+  ne regarde pas une de ces chaînes.
 - **TMDB (optionnel)** : affiches, résumés, bandes-annonces et « Top 10 ».
 - **Mises à jour intégrées** : l'appli propose elle-même les nouvelles versions
   publiées sur GitHub (voir [`docs/RELEASE.md`](docs/RELEASE.md)).

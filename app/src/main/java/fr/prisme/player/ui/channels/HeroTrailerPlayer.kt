@@ -57,6 +57,8 @@ fun HeroTrailerPlayer(
                 .rel(0)
                 .ivLoadPolicy(3)
                 .ccLoadPolicy(0)
+                // Same origin rule as full-screen YouTube channels (see WebChannelLayer).
+                .origin("https://${ctx.packageName}")
                 .build()
             YouTubePlayerView(ctx).apply {
                 enableAutomaticInitialization = false

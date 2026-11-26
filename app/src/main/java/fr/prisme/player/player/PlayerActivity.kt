@@ -143,6 +143,9 @@ class PlayerActivity : ComponentActivity() {
 
     /** Compose-observable id of the playing item; keys per-item overlay state (Skip Intro). */
     private var currentItemId by mutableStateOf<String?>(null)
+    /** Non-null while the current entry is a YouTube video or a web page, not a stream. */
+    private var webTarget by mutableStateOf<WebChannel?>(null)
+    private val webController = WebChannelController()
 
     // Live TV: fixed channel numbering (favourites first, then the catalogue order) and the
     // in-player channel list. Both are only loaded when a live channel plays.
@@ -260,6 +263,9 @@ class PlayerActivity : ComponentActivity() {
                             nextEpisodeCancelled = true
                         },
                     )
+                    webTarget?.let { target ->
+                        WebChannelLayer(target, webController, onYouTubeError = ::showWebError)
+                    }
                     fr.prisme.player.ui.reminders.ReminderHost(onWatch = ::zapToChannelId)
                 }
             }
@@ -469,6 +475,20 @@ class PlayerActivity : ComponentActivity() {
                     }
                     return
                 }
+                // The server answered, but not with media: most likely a web page with its
+                // own player (an HTML page behind an .m3u8 or extension-less link).
+                if (code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED ||
+                    code == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED ||
+                    code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED
+                ) {
+                    val page = channel?.streamUrl?.let(WebChannel::pageFallback)
+                    if (page != null) {
+                        Log.i(TAG, "not a media stream (${error.errorCodeName}); opening it as a page")
+                        player?.stop()
+                        webTarget = page
+                        return
+                    }
+                }
                 val isTransient = code in
                     PlaybackException.ERROR_CODE_IO_UNSPECIFIED..
                     PlaybackException.ERROR_CODE_IO_NO_PERMISSION
@@ -642,13 +662,20 @@ class PlayerActivity : ComponentActivity() {
         frameRateProbe.reset()
         frameRateJob?.cancel()
         loadLiveProgramme(channel)
+        val web = WebChannel.classify(url)
+        webTarget = web
         val p = player ?: return
-        if (resumeMs > 0L) {
+        if (web != null) {
+            // YouTube and pages play in their own view; keep ExoPlayer silent meanwhile.
+            p.stop()
+            p.clearMediaItems()
+        } else if (resumeMs > 0L) {
             p.setMediaItem(MediaItem.fromUri(url), resumeMs)
+            p.prepare()
         } else {
             p.setMediaItem(MediaItem.fromUri(url))
+            p.prepare()
         }
-        p.prepare()
         val app = PrismApp.get()
         val profileId = app.activeProfileId.value
         if (Catchup.isCatchupId(channel.id)) return
@@ -709,9 +736,53 @@ class PlayerActivity : ComponentActivity() {
 
     private fun retryCurrent() {
         errorOverlay = null
+        val web = channels.getOrNull(currentIndex)?.streamUrl?.let(WebChannel::classify)
+        if (web != null) {
+            webTarget = web
+            return
+        }
         val p = player ?: return
         p.prepare()
         p.playWhenReady = true
+    }
+
+    /** YouTube refused the video: same full-screen error as a dead stream. */
+    private fun showWebError(message: String) {
+        webTarget = null
+        errorOverlay = ErrorState(
+            channelName = channels.getOrNull(currentIndex)?.name.orEmpty(),
+            message = message,
+            canSkip = channels.size > 1,
+        )
+    }
+
+    /**
+     * Remote keys while a YouTube video or a web page is shown. A page gets D-pad and OK
+     * first (Android hands them to the focused WebView), so only what it leaves comes here.
+     * @return true when the key was used.
+     */
+    private fun handleWebKey(keyCode: Int): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_ESCAPE -> return webController.handleBack()
+            KeyEvent.KEYCODE_CHANNEL_UP -> { channelStep(+1); return true }
+            KeyEvent.KEYCODE_CHANNEL_DOWN -> { channelStep(-1); return true }
+            KeyEvent.KEYCODE_LAST_CHANNEL, KeyEvent.KEYCODE_PROG_RED -> { flipLastChannel(); return true }
+        }
+        if (webTarget !is WebChannel.YouTube) return false
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_MEDIA_PLAY,
+            KeyEvent.KEYCODE_MEDIA_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            -> webController.togglePlayPause()
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> webController.seekBy(-SEEK_WEB_SECONDS)
+            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> webController.seekBy(SEEK_WEB_SECONDS)
+            KeyEvent.KEYCODE_DPAD_UP -> channelStep(-1)
+            KeyEvent.KEYCODE_DPAD_DOWN -> channelStep(+1)
+            else -> return false
+        }
+        return true
     }
 
     /**
@@ -1075,6 +1146,17 @@ class PlayerActivity : ComponentActivity() {
         }
     }
 
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        // A focused WebView takes every key, including CH+/CH- and Back, and never hands
+        // them on. On a web page those keys belong to the player, so route them first.
+        if (webTarget is WebChannel.Page && event.keyCode in PLAYER_KEYS_OVER_PAGES) {
+            // Same path Activity uses for keys no view took, so Back keeps its press/release
+            // tracking and still closes the player on release.
+            return event.dispatch(this, window.decorView.keyDispatcherState, this)
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         UiSoundEffects.playForRemoteKey(this, keyCode, event?.repeatCount ?: 0)
         // Numeric digits always enter the channel OSD — even when a panel is open; the user
@@ -1160,6 +1242,12 @@ class PlayerActivity : ComponentActivity() {
                 }
             }
         }
+        if (webTarget != null && handleWebKey(keyCode)) return true
+        if (webTarget is WebChannel.Page && keyCode != KeyEvent.KEYCODE_BACK && keyCode != KeyEvent.KEYCODE_ESCAPE) {
+            // The page had the key first; whatever it did not use must not zap or seek.
+            return super.onKeyDown(keyCode, event)
+        }
+
         val channelType = channels.getOrNull(currentIndex)?.type
         val isLive = channelType == ContentType.TV
 
@@ -1390,6 +1478,8 @@ class PlayerActivity : ComponentActivity() {
     }
 
     private fun stopPlayback() {
+        // Web views are recreated by playChannel() when the activity comes back.
+        webTarget = null
         progressJob?.cancel()
         progressJob = null
         statsJob?.cancel()
@@ -1449,6 +1539,15 @@ class PlayerActivity : ComponentActivity() {
         private const val MAX_SUBTITLE_DELAY_MS = 10_000L
         /** Silent-retry budget for transient IO errors before showing the overlay. */
         private const val MAX_AUTO_RETRY = 1
+        private const val SEEK_WEB_SECONDS = 10f
+        private val PLAYER_KEYS_OVER_PAGES = setOf(
+            KeyEvent.KEYCODE_BACK,
+            KeyEvent.KEYCODE_ESCAPE,
+            KeyEvent.KEYCODE_CHANNEL_UP,
+            KeyEvent.KEYCODE_CHANNEL_DOWN,
+            KeyEvent.KEYCODE_LAST_CHANNEL,
+            KeyEvent.KEYCODE_PROG_RED,
+        )
         private const val AUTO_RETRY_DELAY_MS = 1_500L
         /** Remaining-playback threshold that triggers the "Volgende aflevering"-overlay. */
         const val NEXT_EPISODE_WINDOW_MS: Long = 15_000L
