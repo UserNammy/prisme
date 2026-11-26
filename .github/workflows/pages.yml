@@ -1,0 +1,45 @@
+name: Prism Web
+
+# Publishes web/index.html on GitHub Pages, so Prism Web opens from a plain link.
+# One-time setup in the repository: Settings > Pages > Source: "GitHub Actions".
+# Only the page is published: the local relay (serveur.mjs) cannot run on Pages,
+# and a public relay would be an open proxy.
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["web/index.html", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Page only
+        run: |
+          mkdir -p _site
+          cp web/index.html _site/index.html
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
