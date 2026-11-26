@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prism Web</title>
+<!--
+  Prism Web : lecture et test des flux dans un navigateur (pas une version de l'appli).
+  Ouvrir ce fichier directement (double-clic) : pas de serveur nécessaire.
+  Le navigateur est plus strict que la TV (CORS, en-têtes, format .ts) :
+  une chaîne en panne ici peut marcher sur Android, l'inverse est rare.
+-->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<style>
+  :root {
+    --bg: #000;
+    --ink: #F4F6F7;
+    --muted: #B4BBD0;
+    --panel: rgba(255,255,255,.08);
+    --panel-2: rgba(255,255,255,.16);
+    --line: rgba(255,255,255,.16);
+    --accent: #4D86FF;
+    --ok: #3FCF8E;
+    --ko: #FF5A6A;
+    --warn: #F5B94A;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background:
+      radial-gradient(60vmax 45vmax at 0% 0%, rgba(77,134,255,.20), transparent 70%),
+      radial-gradient(55vmax 40vmax at 100% 100%, rgba(255,64,96,.13), transparent 70%);
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+
+  /* En-tête */
+  header {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-right: 8px; }
+  .brand svg { width: 26px; height: 26px; }
+  .brand small { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+  .source { display: flex; gap: 8px; flex: 1 1 420px; min-width: 0; }
+  .field {
+    background: var(--panel); border: 1px solid transparent; border-radius: 10px;
+    padding: 8px 12px; min-width: 0;
+  }
+  .field:focus { outline: none; border-color: var(--accent); }
+  .source select { flex: 0 0 auto; max-width: 210px; }
+  .source input { flex: 1 1 auto; }
+  .btn {
+    background: var(--panel); border: 0; border-radius: 10px; padding: 8px 14px;
+    white-space: nowrap; transition: background .15s;
+  }
+  .btn:hover { background: var(--panel-2); }
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #6596ff; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  #search { flex: 0 1 240px; }
+
+  /* Corps */
+  .body { display: grid; grid-template-columns: 250px 1fr; min-height: 0; }
+  aside { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  #catFilter { margin: 12px; }
+  #cats { overflow-y: auto; padding: 0 8px 16px; flex: 1; }
+  .cat {
+    display: flex; justify-content: space-between; gap: 8px; width: 100%;
+    background: none; border: 0; border-radius: 8px; padding: 7px 10px; text-align: left;
+    color: var(--muted);
+  }
+  .cat:hover { background: var(--panel); color: var(--ink); }
+  .cat.active { background: var(--panel-2); color: var(--ink); }
+  .cat span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cat .n { font-variant-numeric: tabular-nums; font-size: 13px; opacity: .8; }
+  .sep { height: 1px; background: var(--line); margin: 8px 10px; }
+
+  main { overflow-y: auto; padding: 18px 22px 40px; min-width: 0; }
+
+  /* Lecteur */
+  .player {
+    display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px;
+    margin-bottom: 22px;
+  }
+  .screen {
+    position: relative; aspect-ratio: 16 / 9; max-height: 52vh; width: 100%;
+    background: #050608; border-radius: 16px; overflow: hidden;
+  }
+  video { width: 100%; height: 100%; display: block; background: #000; }
+  .overlay {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px;
+    align-items: center; justify-content: center; text-align: center; padding: 24px;
+    background: rgba(0,0,0,.72); color: var(--muted);
+  }
+  .overlay[hidden] { display: none; }
+  .overlay strong { color: var(--ink); font-size: 18px; }
+  .overlay a { color: var(--accent); }
+  .spinner {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid var(--panel-2); border-top-color: var(--accent);
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .info { background: var(--panel); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .info h2 { margin: 0; font-size: 20px; line-height: 1.2; word-break: break-word; }
+  .info .meta { color: var(--muted); font-size: 13px; }
+  .info .url { font: 12px/1.35 ui-monospace, Consolas, monospace; color: var(--muted); word-break: break-all; max-height: 4.2em; overflow: hidden; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row .btn { flex: 1 1 auto; }
+  .hint { font-size: 12px; color: var(--muted); }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--panel-2); }
+  .badge.ok { background: rgba(63,207,142,.18); color: var(--ok); }
+  .badge.ko { background: rgba(255,90,106,.18); color: var(--ko); }
+  .badge.warn { background: rgba(245,185,74,.16); color: var(--warn); }
+
+  /* Barre de catégorie */
+  .bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .bar h3 { margin: 0; font-size: 18px; }
+  .bar .stats { color: var(--muted); font-size: 13px; }
+  .bar .spacer { flex: 1; }
+  .bar label { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; cursor: pointer; }
+
+  /* Tuiles */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .tile {
+    position: relative; background: var(--panel); border: 0; border-radius: 14px; padding: 0;
+    text-align: left; overflow: hidden; transition: transform .15s, background .15s;
+  }
+  .tile:hover, .tile:focus-visible { background: var(--panel-2); transform: scale(1.03); }
+  .tile:focus-visible { outline-offset: 0; }
+  .tile.playing { box-shadow: inset 0 0 0 2px var(--accent); }
+  .logo {
+    aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.04); padding: 12px;
+  }
+  .logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .logo .initials { font-size: 22px; font-weight: 600; color: var(--muted); }
+  .tile .name { padding: 8px 10px 10px; font-size: 13px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dot { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: transparent; }
+  .dot.ok { background: var(--ok); }
+  .dot.ko { background: var(--ko); }
+  .dot.testing { background: var(--warn); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .fav { position: absolute; top: 4px; left: 8px; color: var(--warn); font-size: 14px; }
+  .hdr { position: absolute; bottom: 44px; right: 8px; font-size: 10px; padding: 1px 6px; border-radius: 6px; background: rgba(0,0,0,.6); color: var(--warn); }
+  .more { margin: 18px auto 0; display: block; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+  #catSelect { display: none; }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    .app { height: auto; min-height: 100%; }
+    .body { grid-template-columns: 1fr; }
+    aside { display: none; }
+    #catSelect { display: block; width: 100%; margin-bottom: 14px; }
+    .player { grid-template-columns: 1fr; }
+    main { overflow: visible; padding: 16px; }
+    header { padding: 12px 16px; }
+    .source { flex-wrap: wrap; }
+    .source select { max-width: none; flex: 1 1 100%; }
+    #search { flex: 1 1 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile, .tile:hover { transition: none; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="pl"><path d="M21.9 12.3Q14 8 14 17V84Q14 92 21.9 87.7L84.1 54.3Q92 50 84.1 45.7Z"/></clipPath></defs><g clip-path="url(#pl)"><polygon points="14,8 14,92 40,50" fill="#fff" fill-opacity=".7"/><polygon points="14,8 92,50 40,50" fill="#fff"/><polygon points="14,92 92,50 40,50" fill="#fff" fill-opacity=".4"/></g></svg>
+      prism <small>web</small>
+    </div>
+    <div class="source">
+      <select id="preset" class="field" aria-label="Listes iptv-org"></select>
+      <input id="url" class="field" type="url" placeholder="Adresse d'une playlist M3U" aria-label="Adresse de la playlist">
+      <button id="load" class="btn primary">Charger</button>
+      <button id="fileBtn" class="btn" title="Ouvrir un fichier .m3u de l'ordinateur">Fichier…</button>
+      <input id="file" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl" hidden>
+    </div>
+    <input id="search" class="field" type="search" placeholder="Rechercher une chaîne" aria-label="Rechercher">
+  </header>
+
+  <div class="body">
+    <aside>
+      <input id="catFilter" class="field" type="search" placeholder="Filtrer les pays" aria-label="Filtrer les catégories">
+      <div id="cats"></div>
+    </aside>
+
+    <main>
+      <select id="catSelect" class="field" aria-label="Catégorie"></select>
+
+      <section class="player">
+        <div class="screen">
+          <video id="video" controls playsinline></video>
+          <div id="overlay" class="overlay">
+            <strong>Choisis une chaîne</strong>
+            <span>Clique sur une tuile pour la lire. Page préc. / suiv. ou N / P pour zapper, F pour le plein écran.</span>
+          </div>
+        </div>
+        <div class="info">
+          <div class="meta" id="nowGroup">Aucune chaîne</div>
+          <h2 id="nowName">—</h2>
+          <div id="nowBadges" class="row"></div>
+          <div class="url" id="nowUrl"></div>
+          <div class="row">
+            <button class="btn" id="prev" title="Chaîne précédente (P)">◀ Préc.</button>
+            <button class="btn" id="next" title="Chaîne suivante (N)">Suiv. ▶</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="favBtn">☆ Favori</button>
+            <button class="btn" id="copyBtn">Copier le lien</button>
+          </div>
+          <p class="hint" id="modeHint"></p>
+        </div>
+      </section>
+
+      <div class="bar">
+        <h3 id="catTitle">—</h3>
+        <span class="stats" id="catStats"></span>
+        <span class="spacer"></span>
+        <label><input type="checkbox" id="hideKo"> Masquer les chaînes en panne</label>
+        <button class="btn" id="testBtn">Tester la catégorie</button>
+      </div>
+      <div id="grid" class="grid"></div>
+      <button id="more" class="btn more" hidden>Afficher plus</button>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const PRESETS = [
+    ['Tous les pays (iptv-org)', 'https://iptv-org.github.io/iptv/index.country.m3u'],
+    ['France', 'https://iptv-org.github.io/iptv/countries/fr.m3u'],
+    ['Langue française', 'https://iptv-org.github.io/iptv/languages/fra.m3u'],
+    ['Par thème', 'https://iptv-org.github.io/iptv/index.category.m3u'],
+    ['Par langue', 'https://iptv-org.github.io/iptv/index.language.m3u'],
+  ];
+  const PAGE = 240;
+  const ALL = '\u0000all', FAVS = '\u0000favs';
+
+  const $ = (id) => document.getElementById(id);
+
+  // Relais local (serveur.mjs, lancé par lancer.cmd) : pas de CORS, en-têtes envoyés.
+  const PROXY = window.PRISM_PROXY || null;
+  function via(url, ch, raw) {
+    if (!PROXY) return url;
+    let p = PROXY.base + '?t=' + PROXY.token + '&u=' + encodeURIComponent(url);
+    if (ch && ch.ref) p += '&r=' + encodeURIComponent(ch.ref);
+    if (ch && ch.ua) p += '&a=' + encodeURIComponent(ch.ua);
+    if (raw) p += '&raw=1';
+    return p;
+  }
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('prism-web:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem('prism-web:' + k, JSON.stringify(v)); } catch {} },
+  };
+
+  // ---------- Noms de pays en français ----------
+  const countryFr = new Map();
+  try {
+    const en = new Intl.DisplayNames(['en'], { type: 'region' });
+    const fr = new Intl.DisplayNames(['fr'], { type: 'region' });
+    for (let a = 65; a <= 90; a++) for (let b = 65; b <= 90; b++) {
+      const code = String.fromCharCode(a, b);
+      const e = en.of(code), f = fr.of(code);
+      if (e && f && e !== code) countryFr.set(e, f);
+    }
+  } catch {}
+  const extra = { International: 'International', Undefined: 'Non classé', 'Sans catégorie': 'Sans catégorie' };
+  const label = (g) => extra[g] || countryFr.get(g) || g;
+
+  // ---------- Analyse M3U ----------
+  const attrRe = /([a-zA-Z0-9_-]+)="([^"]*)"/g;
+  function parseExtinf(line) {
+    let q = false, cut = -1;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') q = !q; else if (c === ',' && !q) { cut = i; break; }
+    }
+    const head = cut >= 0 ? line.slice(0, cut) : line;
+    const attrs = {};
+    for (const m of head.matchAll(attrRe)) attrs[m[1]] = m[2];
+    return { name: cut >= 0 ? line.slice(cut + 1).trim() : '', logo: attrs['tvg-logo'] || '', group: attrs['group-title'] || '' };
+  }
+  function parseM3U(text) {
+    const out = [];
+    let cur = null, opts = {}, grp = '';
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      if (line.startsWith('#EXTINF')) { cur = parseExtinf(line); opts = {}; grp = ''; }
+      else if (line.startsWith('#EXTVLCOPT:')) {
+        const kv = line.slice(11), i = kv.indexOf('=');
+        if (i > 0) opts[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
+      }
+      else if (line.startsWith('#EXTGRP:')) grp = line.slice(8).trim();
+      else if (line.startsWith('#')) continue;
+      else if (cur) {
+        const groups = (cur.group || grp || 'Sans catégorie').split(';').map(s => s.trim()).filter(Boolean);
+        out.push({
+          id: out.length, name: cur.name || line, logo: cur.logo, url: line,
+          groups: groups.length ? groups : ['Sans catégorie'],
+          ref: opts['http-referrer'] || '',
+          ua: opts['http-user-agent'] || '',
+          headers: !!(opts['http-referrer'] || opts['http-user-agent']),
+        });
+        cur = null;
+      }
+    }
+    return out;
+  }
+
+  // ---------- État ----------
+  let channels = [];
+  let cats = new Map();           // groupe -> [chaînes]
+  let currentCat = ALL;
+  let visible = [];                // liste affichée (après recherche / filtre)
+  let shown = 0;
+  let current = null;
+  // Résultats séparés avec / sans relais : ils ne veulent pas dire la même chose.
+  const STATUS_KEY = PROXY ? 'status:relais' : 'status';
+  const status = new Map(store.get(STATUS_KEY, []));   // url -> 'ok' | 'ko'
+  const favs = new Set(store.get('favs', []));
+  let hls = null;
+  let testRun = 0;
+
+  const saveStatus = () => store.set(STATUS_KEY, [...status].slice(-20000));
+
+  // ---------- Chargement ----------
+  function fillPresets() {
+    const sel = $('preset');
+    for (const [name, url] of PRESETS) sel.add(new Option(name, url));
+    sel.add(new Option('Autre adresse…', ''));
+    const saved = store.get('url', PRESETS[0][1]);
+    $('url').value = saved;
+    sel.value = PRESETS.some(p => p[1] === saved) ? saved : '';
+    sel.onchange = () => { if (sel.value) { $('url').value = sel.value; load(); } else $('url').focus(); };
+  }
+
+  async function load() {
+    const url = $('url').value.trim();
+    if (!url) return;
+    store.set('url', url);
+    setGridMessage('Chargement de la playlist…', true);
+    $('load').disabled = true;
+    try {
+      const r = await fetch(via(url, null, true));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      ingest(await r.text(), url);
+    } catch (e) {
+      setGridMessage('Impossible de charger la playlist (' + e.message + ').' + (PROXY ? ' Vérifie l’adresse.'
+        : ' Si l’adresse marche dans la TV, le serveur bloque sans doute les navigateurs (CORS) : ouvre Prism Web avec lancer.cmd, ou télécharge le fichier et utilise « Fichier… ».'));
+    } finally {
+      $('load').disabled = false;
+    }
+  }
+
+  function ingest(text, source) {
+    channels = parseM3U(text);
+    if (!channels.length) { setGridMessage('Aucune chaîne trouvée : ce fichier n’est pas une playlist M3U.'); return; }
+    cats = new Map();
+    for (const ch of channels) for (const g of ch.groups) {
+      if (!cats.has(g)) cats.set(g, []);
+      cats.get(g).push(ch);
+    }
+    const last = store.get('cat:' + source, null);
+    currentCat = last && (cats.has(last) || last === ALL || last === FAVS) ? last : (cats.has('France') ? 'France' : ALL);
+    renderCats();
+    selectCat(currentCat);
+  }
+
+  // ---------- Catégories ----------
+  function orderedCats() {
+    return [...cats.keys()].sort((a, b) => {
+      if (a === 'France') return -1;
+      if (b === 'France') return 1;
+      return label(a).localeCompare(label(b), 'fr');
+    });
+  }
+
+  function renderCats() {
+    const box = $('cats'), sel = $('catSelect');
+    const filter = $('catFilter').value.trim().toLowerCase();
+    box.textContent = '';
+    sel.textContent = '';
+    const add = (key, text, n) => {
+      const b = document.createElement('button');
+      b.className = 'cat' + (key === currentCat ? ' active' : '');
+      b.dataset.key = key;
+      b.innerHTML = '<span></span><span class="n"></span>';
+      b.firstChild.textContent = text;
+      b.lastChild.textContent = n.toLocaleString('fr');
+      box.appendChild(b);
+      sel.add(new Option(text + ' (' + n + ')', key, false, key === currentCat));
+    };
+    if (!filter) {
+      add(ALL, 'Toutes les chaînes', channels.length);
+      const favCount = channels.filter(c => favs.has(c.url)).length;
+      if (favCount) add(FAVS, '★ Favoris', favCount);
+      box.appendChild(Object.assign(document.createElement('div'), { className: 'sep' }));
+    }
+    for (const g of orderedCats()) {
+      const text = label(g);
+      if (filter && !text.toLowerCase().includes(filter) && !g.toLowerCase().includes(filter)) continue;
+      add(g, text, cats.get(g).length);
+    }
+  }
+
+  function catChannels(key) {
+    if (key === ALL) return channels;
+    if (key === FAVS) return channels.filter(c => favs.has(c.url));
+    return cats.get(key) || [];
+  }
+
+  function selectCat(key) {
+    currentCat = key;
+    store.set('cat:' + store.get('url', ''), key);
+    $('search').value = '';
+    for (const b of $('cats').children) b.classList?.toggle('active', b.dataset?.key === key);
+    $('catSelect').value = key;
+    testRun++;                                   // arrête un test en cours
+    refreshList();
+    $('grid').parentElement.scrollTo?.({ top: 0 });
+  }
+
+  // ---------- Liste ----------
+  function refreshList() {
+    const q = $('search').value.trim().toLowerCase();
+    let list = q ? channels.filter(c => c.name.toLowerCase().includes(q)) : catChannels(currentCat);
+    if ($('hideKo').checked) list = list.filter(c => status.get(c.url) !== 'ko');
+    visible = list;
+    $('catTitle').textContent = q ? 'Recherche « ' + $('search').value.trim() + ' »'
+      : currentCat === ALL ? 'Toutes les chaînes' : currentCat === FAVS ? 'Favoris' : label(currentCat);
+    updateStats();
+    $('grid').textContent = '';
+    shown = 0;
+    if (!list.length) { setGridMessage(q ? 'Aucune chaîne ne correspond.' : 'Rien à afficher.'); return; }
+    showMore();
+  }
+
+  function updateStats() {
+    const base = $('search').value.trim() ? visible : catChannels(currentCat);
+    let ok = 0, ko = 0;
+    for (const c of base) { const s = status.get(c.url); if (s === 'ok') ok++; else if (s === 'ko') ko++; }
+    const parts = [base.length.toLocaleString('fr') + ' chaînes'];
+    if (ok || ko) parts.push(ok + ' OK', ko + ' en panne');
+    $('catStats').textContent = parts.join(' · ');
+  }
+
+  function showMore() {
+    const frag = document.createDocumentFragment();
+    const end = Math.min(visible.length, shown + PAGE);
+    for (let i = shown; i < end; i++) frag.appendChild(tile(visible[i]));
+    $('grid').appendChild(frag);
+    shown = end;
+    $('more').hidden = shown >= visible.length;
+    $('more').textContent = 'Afficher plus (' + (visible.length - shown).toLocaleString('fr') + ' restantes)';
+  }
+
+  function initials(name) {
+    return name.replace(/\(.*?\)|\[.*?\]/g, '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+  }
+
+  function tile(ch) {
+    const b = document.createElement('button');
+    b.className = 'tile' + (current && current.id === ch.id ? ' playing' : '');
+    b.dataset.id = ch.id;
+    b.title = ch.name;
+    const logo = document.createElement('div');
+    logo.className = 'logo';
+    if (ch.logo) {
+      const img = new Image();
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.alt = '';
+      img.src = ch.logo;
+      img.onerror = () => { img.replaceWith(initialsEl(ch.name)); };
+      logo.appendChild(img);
+    } else logo.appendChild(initialsEl(ch.name));
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = ch.name;
+    const dot = document.createElement('span');
+    dot.className = 'dot ' + (status.get(ch.url) || '');
+    b.append(logo, name, dot);
+    if (favs.has(ch.url)) b.appendChild(Object.assign(document.createElement('span'), { className: 'fav', textContent: '★' }));
+    if (ch.headers && !PROXY) b.appendChild(Object.assign(document.createElement('span'), { className: 'hdr', textContent: 'en-tête', title: 'Ce flux demande un en-tête spécial (referrer / user-agent) : ouvre Prism Web avec lancer.cmd pour l’envoyer.' }));
+    return b;
+  }
+  function initialsEl(name) { return Object.assign(document.createElement('span'), { className: 'initials', textContent: initials(name) }); }
+
+  function setGridMessage(msg, spin) {
+    $('grid').innerHTML = '';
+    $('more').hidden = true;
+    const d = document.createElement('div');
+    d.className = 'empty';
+    d.style.gridColumn = '1 / -1';
+    if (spin) d.innerHTML = '<div class="spinner" style="margin:0 auto 12px"></div>';
+    d.appendChild(document.createTextNode(msg));
+    $('grid').appendChild(d);
+  }
+
+  function updateTile(ch) {
+    const t = $('grid').querySelector('.tile[data-id="' + ch.id + '"]');
+    if (!t) return;
+    t.querySelector('.dot').className = 'dot ' + (status.get(ch.url) || '');
+    t.classList.toggle('playing', !!current && current.id === ch.id);
+    const fav = t.querySelector('.fav');
+    if (favs.has(ch.url) && !fav) t.appendChild(Object.assign(document.createElement('span'), { className: 'fav', textContent: '★' }));
+    if (!favs.has(ch.url) && fav) fav.remove();
+  }
+
+  function setStatus(ch, s) {
+    if (status.get(ch.url) === s) return;
+    status.set(ch.url, s);
+    saveStatus();
+    updateTile(ch);
+    updateStats();
+    if (current && current.id === ch.id) renderNow();
+  }
+
+  // ---------- Lecture ----------
+  const video = $('video');
+
+  function overlay(html, spin) {
+    const o = $('overlay');
+    if (html == null) { o.hidden = true; return; }
+    o.hidden = false;
+    o.innerHTML = (spin ? '<div class="spinner"></div>' : '') + html;
+  }
+  const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function stop() {
+    if (hls) { hls.destroy(); hls = null; }
+    video.removeAttribute('src');
+    video.load();
+  }
+
+  function play(ch) {
+    const prev = current;
+    current = ch;
+    store.set('last', ch.url);
+    if (prev) updateTile(prev);
+    updateTile(ch);
+    renderNow();
+    stop();
+    const url = ch.url;
+
+    if (/youtube\.com|youtu\.be/i.test(url)) {
+      overlay('<strong>Lien YouTube</strong><span>Prism le lit dans sa couche web sur la TV. Ici : <a href="' + esc(url) + '" target="_blank" rel="noopener">ouvrir sur YouTube</a>.</span>');
+      return;
+    }
+    if (!PROXY && location.protocol === 'https:' && url.startsWith('http:')) {
+      overlay('<strong>Flux non sécurisé (http)</strong><span>Une page https ne peut pas lire un flux http. Ouvre ce fichier en local (double-clic sur web/index.html).</span>');
+      return;
+    }
+
+    overlay('<span>Connexion à « ' + esc(ch.name) + ' »…</span>', true);
+    video.onplaying = () => { if (current === ch) { overlay(null); setStatus(ch, 'ok'); } };
+    video.onerror = () => { if (current === ch && !hls) failed(ch, 'Format non lisible par le navigateur (flux .ts brut ou codec non pris en charge).'); };
+
+    const direct = /\.(mp4|webm|ogv|ogg|mp3|aac)(\?|#|$)/i.test(url);
+    if (!direct && window.Hls && Hls.isSupported()) {
+      hls = new Hls({ manifestLoadingTimeOut: 12000, manifestLoadingMaxRetry: 1, levelLoadingTimeOut: 12000, maxBufferLength: 20, enableWorker: true });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => overlay('<strong>Lecture prête</strong><span>Clique sur lecture ▶ (le navigateur bloque la lecture automatique).</span>')));
+      hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal && current === ch) failed(ch, explain(d)); });
+      hls.loadSource(via(url, ch));
+      hls.attachMedia(video);
+    } else {
+      video.src = via(url, ch);
+      video.play().catch(() => {});
+    }
+  }
+
+  function explain(d) {
+    const code = d.response && d.response.code;
+    if (d.details === 'manifestParsingError') return 'Ce n’est pas un flux HLS lisible ici (page web, flux .ts brut ou format inconnu).';
+    if (d.details && d.details.includes('TimeOut')) return 'Le serveur ne répond pas (hors ligne ou très lent).';
+    if (code === 404 || code === 410) return 'Lien mort (erreur ' + code + ').';
+    if (code === 401 || code === 403 || code === 451) return 'Refusé par le serveur (erreur ' + code + ') : géo-blocage, ou chaîne réservée à certains pays.';
+    if (PROXY && code === 502) return 'Serveur injoignable : chaîne hors ligne ou adresse morte.';
+    if (PROXY && code === 504) return 'Le serveur ne répond pas (hors ligne ou très lent).';
+    if (code >= 500) return 'Le serveur est en erreur (' + code + ').';
+    if (d.type === 'networkError') return PROXY ? 'Connexion coupée par le serveur.'
+      : 'Bloqué par le navigateur (CORS) ou serveur injoignable. Ouvre Prism Web avec lancer.cmd pour lever ce blocage.';
+    if (d.type === 'mediaError') return 'Format vidéo non pris en charge par ce navigateur.';
+    return 'Erreur de lecture (' + (d.details || d.type) + ').';
+  }
+
+  function failed(ch, reason) {
+    if (hls) { hls.destroy(); hls = null; }
+    setStatus(ch, 'ko');
+    overlay('<strong>Chaîne indisponible ici</strong><span>' + esc(reason) + '</span>' + (ch.headers && !PROXY ? '<span class="badge warn">Ce flux demande un en-tête spécial : lance lancer.cmd</span>' : ''));
+  }
+
+  function renderNow() {
+    const ch = current;
+    if (!ch) return;
+    $('nowName').textContent = ch.name;
+    $('nowGroup').textContent = ch.groups.map(label).join(' · ');
+    $('nowUrl').textContent = ch.url;
+    const s = status.get(ch.url);
+    const badges = [];
+    if (s === 'ok') badges.push('<span class="badge ok">Fonctionne</span>');
+    if (s === 'ko') badges.push('<span class="badge ko">En panne ici</span>');
+    if (ch.headers) badges.push(PROXY ? '<span class="badge">En-tête envoyé</span>' : '<span class="badge warn">En-tête requis</span>');
+    $('nowBadges').innerHTML = badges.join('');
+    $('favBtn').textContent = favs.has(ch.url) ? '★ Retirer' : '☆ Favori';
+  }
+
+  function zap(delta) {
+    if (!visible.length) return;
+    let i = current ? visible.findIndex(c => c.id === current.id) : -1;
+    i = (i + delta + visible.length) % visible.length;
+    while (i >= shown) showMore();
+    play(visible[i]);
+    $('grid').querySelector('.tile[data-id="' + visible[i].id + '"]')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  // ---------- Test d'une catégorie ----------
+  async function probe(ch) {
+    if (/youtube\.com|youtu\.be/i.test(ch.url)) return null;
+    if (!PROXY && location.protocol === 'https:' && ch.url.startsWith('http:')) return null;
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), PROXY ? 17000 : 9000);
+    try {
+      const r = await fetch(via(ch.url, ch), { signal: ctl.signal, cache: 'no-store' });
+      if (!r.ok) return false;
+      const type = r.headers.get('content-type') || '';
+      if (/\.m3u8?(\?|$)/i.test(ch.url) || /mpegurl/i.test(type)) {
+        const txt = await r.text();
+        return txt.includes('#EXTM3U');
+      }
+      r.body && r.body.cancel();
+      return true;
+    } catch { return false; }
+    finally { clearTimeout(timer); }
+  }
+
+  async function testCategory() {
+    const run = ++testRun;
+    const list = ($('search').value.trim() ? visible : catChannels(currentCat)).slice();
+    const btn = $('testBtn');
+    let done = 0;
+    btn.textContent = 'Arrêter le test';
+    btn.onclick = () => { testRun++; };
+    const worker = async () => {
+      while (list.length && run === testRun) {
+        const ch = list.shift();
+        const t = $('grid').querySelector('.tile[data-id="' + ch.id + '"] .dot');
+        if (t) t.className = 'dot testing';
+        const res = await probe(ch);
+        if (run !== testRun) { if (t) t.className = 'dot ' + (status.get(ch.url) || ''); break; }
+        if (res === null) { if (t) t.className = 'dot ' + (status.get(ch.url) || ''); }
+        else setStatus(ch, res ? 'ok' : 'ko');
+        if (t && res !== null) t.className = 'dot ' + (res ? 'ok' : 'ko');
+        done++;
+        btn.textContent = 'Arrêter (' + done + ' / ' + (done + list.length) + ')';
+      }
+    };
+    await Promise.all(Array.from({ length: 8 }, worker));
+    if (run === testRun) testRun++;
+    btn.textContent = 'Tester la catégorie';
+    btn.onclick = testCategory;
+    if ($('hideKo').checked) refreshList();
+  }
+
+  // ---------- Événements ----------
+  $('load').onclick = load;
+  $('url').addEventListener('keydown', e => { if (e.key === 'Enter') load(); });
+  $('fileBtn').onclick = () => $('file').click();
+  $('file').onchange = async () => {
+    const f = $('file').files[0];
+    if (!f) return;
+    $('preset').value = '';
+    $('url').value = '';
+    store.set('url', 'fichier:' + f.name);
+    ingest(await f.text(), 'fichier:' + f.name);
+  };
+  $('cats').addEventListener('click', e => { const b = e.target.closest('.cat'); if (b) selectCat(b.dataset.key); });
+  $('catSelect').onchange = () => selectCat($('catSelect').value);
+  $('catFilter').addEventListener('input', renderCats);
+  let searchTimer = 0;
+  $('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(refreshList, 180); });
+  $('hideKo').onchange = refreshList;
+  $('more').onclick = showMore;
+  $('grid').addEventListener('click', e => {
+    const t = e.target.closest('.tile');
+    if (!t) return;
+    play(channels[+t.dataset.id]);
+    if (matchMedia('(max-width: 900px)').matches) document.querySelector('.player').scrollIntoView({ behavior: 'smooth' });
+  });
+  $('prev').onclick = () => zap(-1);
+  $('next').onclick = () => zap(1);
+  $('testBtn').onclick = testCategory;
+  $('favBtn').onclick = () => {
+    if (!current) return;
+    favs.has(current.url) ? favs.delete(current.url) : favs.add(current.url);
+    store.set('favs', [...favs]);
+    updateTile(current);
+    renderNow();
+    renderCats();
+  };
+  $('copyBtn').onclick = async () => {
+    if (!current) return;
+    try { await navigator.clipboard.writeText(current.url); $('copyBtn').textContent = 'Copié ✓'; }
+    catch { $('copyBtn').textContent = 'Copie impossible'; }
+    setTimeout(() => { $('copyBtn').textContent = 'Copier le lien'; }, 1500);
+  };
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, select, textarea')) return;
+    if (e.key === 'PageDown' || e.key === 'n' || e.key === 'N') { e.preventDefault(); zap(1); }
+    else if (e.key === 'PageUp' || e.key === 'p' || e.key === 'P') { e.preventDefault(); zap(-1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.screen').requestFullscreen?.();
+    }
+  });
+
+  $('modeHint').innerHTML = PROXY
+    ? '<span class="badge ok">Relais actif</span> Les flux passent par lancer.cmd : plus de blocage CORS, en-têtes envoyés comme sur la TV.'
+    : 'Ouvert sans relais : le navigateur bloque une partie des chaînes (CORS, en-têtes). Lance <b>lancer.cmd</b> pour les débloquer.';
+
+  fillPresets();
+  if (!window.Hls) overlay('<strong>hls.js n’a pas pu être chargé</strong><span>Vérifie la connexion internet : seuls les flux mp4 seront lisibles.</span>');
+  if (!store.get('url', '').startsWith('fichier:')) load();
+  else { $('url').value = PRESETS[0][1]; load(); }
+})();
+</script>
+</body>
+</html>

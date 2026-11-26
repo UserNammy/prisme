@@ -71,6 +71,20 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Au premier lancement, l'assistant demande la source (M3U ou Xtream). Le plus simple
 est de passer par le QR code et de taper les identifiants sur le téléphone.
 
+## Prism Web (sur ordinateur)
+
+Le dossier [`web/`](web/) contient une petite version navigateur, pour regarder et
+tester des playlists M3U sur un PC (par défaut, les listes publiques
+[iptv-org](https://iptv-org.github.io/), une catégorie par pays). Ce n'est pas
+l'appli : pas de profils ni de guide, juste la liste, le lecteur et un test des
+chaînes.
+
+- **Double-clic sur `web/lancer.cmd`** (Node.js requis) : la page s'ouvre avec un
+  relais local qui lève les blocages du navigateur (CORS) et envoie les en-têtes
+  demandés par certaines chaînes, comme la TV.
+- Sans Node.js, ouvrir `web/index.html` directement marche aussi, mais une partie
+  des chaînes sera bloquée par le navigateur.
+
 ## Structure
 
 ```
