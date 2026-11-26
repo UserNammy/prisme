@@ -26,8 +26,9 @@ import java.util.Locale
  * keeps other devices on the network from stumbling onto the form. Runs only while a
  * screen that shows the QR is open (reference counted via [start]/[stop]).
  *
- * The same page also downloads a backup (`/<token>/backup`) and restores one
- * (`POST /<token>/restore`), since Android TV boxes rarely have a file picker.
+ * The same page also downloads a backup (`/<token>/backup`), restores one
+ * (`POST /<token>/restore`) and receives an M3U file (`POST /<token>/playlist`) that
+ * becomes the source, since Android TV boxes rarely have a file picker.
  */
 object PhoneSetupServer {
 
@@ -42,6 +43,13 @@ object PhoneSetupServer {
     private val _submission = MutableStateFlow<Submission?>(null)
     /** Latest form sent from a phone; consume with [consume] once applied. */
     val submission: StateFlow<Submission?> = _submission.asStateFlow()
+
+    /** An M3U file received from the phone and already saved as the active source. */
+    data class ImportedPlaylist(val fileName: String, val channelCount: Int)
+
+    private val _playlistImported = MutableStateFlow<ImportedPlaylist?>(null)
+    /** Last playlist received while the server ran, so the settings screen can say so. */
+    val playlistImported: StateFlow<ImportedPlaylist?> = _playlistImported.asStateFlow()
 
     private val _restored = MutableStateFlow(0)
     /** Incremented after each successful restore, so the settings screen can reload. */
@@ -63,6 +71,7 @@ object PhoneSetupServer {
             }
             token = newToken()
             _submission.value = null
+            _playlistImported.value = null
             socket = server
             thread = Thread({ acceptLoop(server) }, "phone-setup").apply {
                 isDaemon = true
@@ -96,7 +105,15 @@ object PhoneSetupServer {
         }
     }
 
-    private class Request(val method: String, val path: String, val body: ByteArray)
+    private class Request(
+        val method: String,
+        val path: String,
+        val body: ByteArray,
+        /** Lower-cased header names. */
+        val headers: Map<String, String>,
+        /** Content-Length as sent, which may exceed what was read into [body]. */
+        val declaredLength: Int,
+    )
 
     private fun handle(client: Socket) {
         client.soTimeout = 15_000
@@ -124,7 +141,7 @@ object PhoneSetupServer {
             return
         }
         when (request.method to segments.getOrNull(1)) {
-            "GET" to null -> html("200 OK", FORM + BACKUP_BLOCK)
+            "GET" to null -> html("200 OK", FORM + PLAYLIST_BLOCK + BACKUP_BLOCK)
             "POST" to null -> {
                 val fields = parseForm(String(request.body, Charsets.UTF_8))
                 _submission.value = Submission(
@@ -135,6 +152,26 @@ object PhoneSetupServer {
                     password = fields["password"].orEmpty(),
                 )
                 html("200 OK", "<h2>Reçu</h2><p>Revenez sur votre TV : les données sont prêtes dans Réglages. Testez la connexion puis enregistrez.</p>")
+            }
+            "POST" to "playlist" -> {
+                if (request.declaredLength > LocalPlaylist.MAX_BYTES) {
+                    text("413 Payload Too Large", "Fichier trop volumineux (20 Mo maximum).")
+                    return
+                }
+                val app = PrismApp.get()
+                val name = LocalPlaylist.displayName(request.headers["x-file-name"])
+                runCatching { LocalPlaylist.save(request.body) }.fold(
+                    onSuccess = { channels ->
+                        runBlocking { app.settings.saveLocalM3u(name) }
+                        _playlistImported.value = ImportedPlaylist(name, channels.size)
+                        app.appScope.launch { app.refreshUseCase(force = true) }
+                        text("200 OK", "Liste reçue : ${channels.size} chaînes. Le catalogue se recharge sur la TV.")
+                    },
+                    onFailure = {
+                        Log.w(TAG, "playlist import failed", it)
+                        text("400 Bad Request", it.message ?: "Fichier refusé.")
+                    },
+                )
             }
             "GET" to "backup" -> {
                 val app = PrismApp.get()
@@ -173,15 +210,22 @@ object PhoneSetupServer {
         val parts = requestLine.split(" ")
         val method = parts.getOrNull(0).orEmpty()
         val path = parts.getOrNull(1).orEmpty().substringBefore('?')
-        var contentLength = 0
+        val headers = HashMap<String, String>()
         while (true) {
             val line = readLine(input) ?: break
             if (line.isEmpty()) break
-            if (line.startsWith("Content-Length:", ignoreCase = true)) {
-                contentLength = line.substringAfter(':').trim().toIntOrNull() ?: 0
-            }
+            val name = line.substringBefore(':', "").trim().lowercase(Locale.ROOT)
+            if (name.isNotEmpty()) headers[name] = line.substringAfter(':').trim()
         }
-        val length = contentLength.coerceIn(0, MAX_BODY_BYTES)
+        val contentLength = headers["content-length"]?.toIntOrNull() ?: 0
+        // Playlists and backups that carry one can be large; everything else stays small.
+        val limit = when (path.trimEnd('/').substringAfterLast('/')) {
+            "playlist" -> LocalPlaylist.MAX_BYTES
+            "restore" -> LocalPlaylist.MAX_BYTES + MAX_BODY_BYTES
+            else -> MAX_BODY_BYTES
+        }
+        // An oversized upload is refused without reading it, rather than silently cut.
+        val length = if (contentLength > limit) 0 else contentLength.coerceAtLeast(0)
         val body = ByteArray(length)
         var read = 0
         while (read < length) {
@@ -189,7 +233,7 @@ object PhoneSetupServer {
             if (n < 0) break
             read += n
         }
-        return Request(method, path, if (read == length) body else body.copyOf(read))
+        return Request(method, path, if (read == length) body else body.copyOf(read), headers, contentLength)
     }
 
     private fun readLine(input: InputStream): String? {
@@ -255,6 +299,36 @@ object PhoneSetupServer {
           <label for="m3u">M3U-URL</label><input type="url" id="m3u" name="m3u" placeholder="http://…/playlist.m3u">
           <button type="submit">Envoyer à la TV</button>
         </form>
+    """.trimIndent()
+
+    private val PLAYLIST_BLOCK = """
+        <hr>
+        <h2>Envoyer un fichier de chaînes</h2>
+        <p class="hint">Un fichier .m3u ou .m3u8 de votre téléphone. Il est enregistré uniquement
+        sur la TV et devient la source de Prism ; il n'est envoyé nulle part ailleurs.</p>
+        <input type="file" id="playlist-file">
+        <button type="button" id="playlist-btn">Envoyer le fichier à la TV</button>
+        <p id="playlist-status" class="hint"></p>
+        <script>
+          (function () {
+            var base = location.pathname.replace(/\/+$/, '');
+            var max = 20 * 1024 * 1024;
+            document.getElementById('playlist-btn').onclick = function () {
+              var f = document.getElementById('playlist-file').files[0];
+              var status = document.getElementById('playlist-status');
+              if (!f) { status.textContent = 'Choisissez d’abord un fichier.'; return; }
+              if (f.size > max) { status.textContent = 'Fichier trop volumineux (20 Mo maximum).'; return; }
+              status.textContent = 'Envoi…';
+              fetch(base + '/playlist', {
+                method: 'POST',
+                headers: { 'X-File-Name': encodeURIComponent(f.name) },
+                body: f
+              }).then(function (r) {
+                return r.text().then(function (t) { status.textContent = t; });
+              }).catch(function () { status.textContent = 'Échec de l’envoi.'; });
+            };
+          })();
+        </script>
     """.trimIndent()
 
     private val BACKUP_BLOCK = """

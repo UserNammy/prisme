@@ -3,6 +3,7 @@ package fr.prisme.player.data.backup
 import android.content.ContentValues
 import android.database.Cursor
 import fr.prisme.player.data.db.IptvDatabase
+import fr.prisme.player.data.settings.LocalPlaylist
 import fr.prisme.player.data.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,8 +24,9 @@ import kotlinx.serialization.json.longOrNull
 
 /**
  * Exports / restores everything the user configured, as one JSON file: the settings
- * (source and credentials included) and the per-profile tables. The catalogue itself is
- * not saved — it is re-downloaded from the source after a restore.
+ * (source and credentials included), the per-profile tables and, when the source is a
+ * file sent from the phone, that playlist file. The catalogue itself is not saved — it is
+ * rebuilt from the source after a restore.
  *
  * Tables are copied column by column through SQLite, so the format follows the Room
  * schema without per-entity code. A restore only writes columns that exist in the
@@ -50,6 +52,7 @@ class BackupManager(
             put("createdAt", JsonPrimitive(System.currentTimeMillis()))
             put("settings", settings.exportForBackup())
             put("tables", tables)
+            LocalPlaylist.readText()?.let { put("localPlaylist", JsonPrimitive(it)) }
         }
         json.encodeToString(JsonObject.serializer(), root)
     }
@@ -60,6 +63,9 @@ class BackupManager(
             .getOrElse { throw IllegalArgumentException("Fichier illisible.") }
         require(root["app"]?.jsonPrimitive?.content == APP_ID) { "Ce fichier n'est pas une sauvegarde Prism." }
         require((root["format"]?.jsonPrimitive?.int ?: 0) <= FORMAT) { "Sauvegarde créée par une version plus récente de Prism." }
+        // Checked before anything is overwritten, so a damaged file cannot leave half a restore.
+        val playlist = (root["localPlaylist"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        playlist?.let { LocalPlaylist.parse(it) }
 
         val tables = root["tables"] as? JsonObject
         if (tables != null) {
@@ -79,6 +85,7 @@ class BackupManager(
                 }
             }
         }
+        playlist?.let { LocalPlaylist.restore(it) }
         (root["settings"] as? JsonObject)?.let { settings.restoreFromBackup(it) }
     }
 

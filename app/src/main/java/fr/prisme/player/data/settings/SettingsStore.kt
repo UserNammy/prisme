@@ -32,6 +32,7 @@ class SettingsStore(private val context: Context) {
     val sourceConfig: Flow<SourceConfig?> = context.dataStore.data.map { prefs ->
         when (prefs[TYPE]) {
             TYPE_M3U -> prefs[M3U_URL]?.takeIf { it.isNotBlank() }?.let(SourceConfig::M3u)
+            TYPE_M3U_FILE -> SourceConfig.LocalM3u(prefs[M3U_FILE_NAME]?.takeIf { it.isNotBlank() } ?: "playlist.m3u")
             TYPE_XTREAM -> {
                 val host = prefs[XT_HOST]?.trim().orEmpty()
                 val user = prefs[XT_USER].orEmpty()
@@ -43,6 +44,12 @@ class SettingsStore(private val context: Context) {
             else -> null
         }
     }
+
+    /**
+     * Name of the last playlist file imported from the phone. Kept when another source is
+     * chosen, since the file itself stays on the TV and can be selected again.
+     */
+    val localPlaylistName: Flow<String?> = context.dataStore.data.map { it[M3U_FILE_NAME] }
 
     val playlistEtag: Flow<String?> = context.dataStore.data.map { it[PLAYLIST_ETAG] }
     val playlistLastModified: Flow<String?> = context.dataStore.data.map { it[PLAYLIST_LAST_MODIFIED] }
@@ -247,6 +254,17 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    /** Makes the playlist file imported from the phone the active source. */
+    suspend fun saveLocalM3u(fileName: String) {
+        context.dataStore.edit { prefs ->
+            prefs[TYPE] = TYPE_M3U_FILE
+            prefs[M3U_FILE_NAME] = fileName
+            prefs.remove(M3U_URL)
+            prefs.remove(XT_HOST); prefs.remove(XT_USER); prefs.remove(XT_PASS)
+            prefs.remove(PLAYLIST_ETAG); prefs.remove(PLAYLIST_LAST_MODIFIED)
+        }
+    }
+
     suspend fun saveXtream(host: String, username: String, password: String) {
         context.dataStore.edit { prefs ->
             prefs[TYPE] = TYPE_XTREAM
@@ -321,6 +339,7 @@ class SettingsStore(private val context: Context) {
     private companion object {
         val TYPE = stringPreferencesKey("source_type")
         val M3U_URL = stringPreferencesKey("m3u_url")
+        val M3U_FILE_NAME = stringPreferencesKey("m3u_file_name")
         val XT_HOST = stringPreferencesKey("xt_host")
         val XT_USER = stringPreferencesKey("xt_user")
         val XT_PASS = stringPreferencesKey("xt_pass")
@@ -343,6 +362,7 @@ class SettingsStore(private val context: Context) {
         val AUTO_REFRESH_HOUR = intPreferencesKey("auto_refresh_hour")
         val CATEGORY_FILTER = stringPreferencesKey("category_filter")
         const val TYPE_M3U = "m3u"
+        const val TYPE_M3U_FILE = "m3u_file"
         const val TYPE_XTREAM = "xtream"
         const val RECENT_SEARCHES_MAX = 6
         const val DEFAULT_PROFILE_ID = "default"

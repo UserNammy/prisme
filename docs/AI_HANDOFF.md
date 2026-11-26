@@ -33,7 +33,8 @@ Dernier jalon : passe de nommage (Prism, `fr.prisme.player`, français par défa
 
 Fonctionnel dans la base existante :
 
-- sources M3U/M3U8 et Xtream ;
+- sources M3U/M3U8 (adresse web ou fichier envoyé depuis le téléphone, gardé dans
+  le stockage privé de l’appli : `LocalPlaylist`) et Xtream ;
 - cache Room local, rafraîchissement manuel et planifié ;
 - lecture Media3 / ExoPlayer (HLS, DASH, TS), pistes audio et sous-titres ;
 - EPG XMLTV lorsque la source le fournit ;

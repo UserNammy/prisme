@@ -13,6 +13,12 @@
     <string name="settings_xtream_user">Identifiant</string>
     <string name="settings_xtream_pass">Mot de passe</string>
     <string name="settings_save">Enregistrer</string>
+    <string name="settings_source_file">Fichier</string>
+    <string name="settings_local_file_current">Fichier importé : %1$s</string>
+    <string name="settings_local_file_none">Aucun fichier importé pour l’instant.</string>
+    <string name="settings_local_file_received">Liste reçue : %1$d chaînes. Le catalogue se recharge.</string>
+    <string name="settings_local_file_hint">Envoyez un fichier .m3u depuis votre téléphone : scannez le QR code ci-dessous, puis touchez « Envoyer le fichier à la TV ». Il reste uniquement sur cette TV.</string>
+    <string name="settings_local_file_missing">Aucun fichier importé : envoyez-en un depuis le téléphone.</string>
     <string name="settings_saved">Enregistré</string>
 
     <string name="wizard_welcome_title">Bienvenue</string>
