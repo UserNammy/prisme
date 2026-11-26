@@ -44,6 +44,15 @@ Chaque push (sans tag) produit aussi un APK téléchargeable dans l'onglet
 
 ## Première installation sur une TV
 
+Le plus simple : l'appli **Downloader** (AFTVnews) sur la TV, avec ce lien, qui
+donne toujours la dernière version publiée :
+
+```
+https://github.com/UserNammy/prisme/releases/latest/download/prism.apk
+```
+
+Sinon :
+
 L'appli doit être installée une première fois à la main (ADB ou clé USB) avec un
 APK **release** signé avec la clé ci-dessus : la version debug, plus lente, n'est
 pas faite pour l'usage quotidien. À la première mise à jour, Android demande

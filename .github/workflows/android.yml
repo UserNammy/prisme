@@ -90,6 +90,10 @@ jobs:
             echo "::error::Publication refusée : configure d'abord les secrets RELEASE_* (voir docs/RELEASE.md)."
             exit 1
           fi
-          gh release create "$GITHUB_REF_NAME" dist/*.apk \
+          # prism.apk: fixed name, so ".../releases/latest/download/prism.apk" always gives the
+          # newest version (handy for the Downloader app on TV). The in-app updater only reads
+          # prism-<versionCode>.apk and ignores it.
+          cp "dist/prism-${VERSION_CODE}.apk" prism.apk
+          gh release create "$GITHUB_REF_NAME" dist/*.apk prism.apk \
             --title "Prism $VERSION_NAME" \
             --generate-notes
