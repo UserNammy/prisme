@@ -736,9 +736,14 @@
     }
   });
 
+  // Version en ligne (GitHub Pages, en https) : pas de relais possible, et le navigateur
+  // refuse en plus les flux en http:// depuis une page https (« contenu mixte »).
+  const HOSTED = !PROXY && location.protocol === 'https:';
   $('modeHint').innerHTML = PROXY
     ? '<span class="badge ok">Relais actif</span> Les flux passent par lancer.cmd : plus de blocage CORS, en-têtes envoyés comme sur la TV.'
-    : 'Ouvert sans relais : le navigateur bloque une partie des chaînes (CORS, en-têtes). Lance <b>lancer.cmd</b> pour les débloquer.';
+    : HOSTED
+      ? 'Version en ligne : le navigateur bloque une partie des chaînes (CORS, en-têtes, flux en http://). Elles marchent dans l’appli Prism ou avec la version PC (<b>lancer.cmd</b>).'
+      : 'Ouvert sans relais : le navigateur bloque une partie des chaînes (CORS, en-têtes). Lance <b>lancer.cmd</b> pour les débloquer.';
 
   fillPresets();
   if (!window.Hls) overlay('<strong>hls.js n’a pas pu être chargé</strong><span>Vérifie la connexion internet : seuls les flux mp4 seront lisibles.</span>');

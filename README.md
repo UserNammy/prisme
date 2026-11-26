@@ -84,6 +84,10 @@ chaînes.
   demandés par certaines chaînes, comme la TV.
 - Sans Node.js, ouvrir `web/index.html` directement marche aussi, mais une partie
   des chaînes sera bloquée par le navigateur.
+- **En ligne, sans rien installer** : <https://usernammy.github.io/prisme/>, publié
+  par GitHub Pages à chaque mise à jour de `web/index.html` sur `main`
+  (`.github/workflows/pages.yml`). Pas de relais possible en ligne : les chaînes
+  bloquées par le navigateur, et celles en `http://`, ne s'y lisent pas.
 
 ## Structure
 
