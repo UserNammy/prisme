@@ -25,7 +25,9 @@ android {
         // Kotlin package and applicationId are both fr.prisme.player.
         // Keeping the new ID from day one means installs and future signing belong to Prism.
         applicationId = "fr.prisme.player"
-        minSdk = 29
+        // Android 8.0: many TVs still in use (TCL, Philips, Sony 2018-2020) run Android 8 or 9,
+        // and 8.0 is also the floor for installing our own updates (canRequestPackageInstalls).
+        minSdk = 26
         targetSdk = 34
         // CI passes VERSION_CODE (GitHub run number) so every published build is newer
         // than the last one; the in-app updater compares against it.

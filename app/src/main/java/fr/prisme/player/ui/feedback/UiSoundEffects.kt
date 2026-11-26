@@ -2,6 +2,7 @@ package fr.prisme.player.ui.feedback
 
 import android.content.Context
 import android.media.AudioManager
+import android.os.Build
 import android.view.KeyEvent
 
 /**
@@ -27,7 +28,8 @@ object UiSoundEffects {
             KeyEvent.KEYCODE_DPAD_RIGHT -> AudioManager.FX_FOCUS_NAVIGATION_RIGHT
             KeyEvent.KEYCODE_BACK,
             KeyEvent.KEYCODE_ESCAPE,
-            -> AudioManager.FX_BACK
+            // FX_BACK only exists since Android 12; older TVs get the plain click.
+            -> if (Build.VERSION.SDK_INT >= 31) AudioManager.FX_BACK else AudioManager.FX_KEY_CLICK
 
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER,

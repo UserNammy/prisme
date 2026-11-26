@@ -19,6 +19,7 @@
     <string name="web_youtube_not_embeddable">Le propriétaire de cette vidéo n’autorise pas sa lecture en dehors de YouTube.</string>
     <string name="web_youtube_not_found">Vidéo YouTube introuvable ou privée.</string>
     <string name="web_youtube_error">YouTube n’a pas pu lire cette vidéo.</string>
+    <string name="web_youtube_webview_outdated">YouTube ne démarre pas : le moteur web de la TV (Android System WebView %1$s) est sans doute trop ancien. Mettez-le à jour depuis le Play Store de la TV.</string>
     <string name="settings_local_file_current">Fichier importé : %1$s</string>
     <string name="settings_local_file_none">Aucun fichier importé pour l’instant.</string>
     <string name="settings_local_file_received">Liste reçue : %1$d chaînes. Le catalogue se recharge.</string>

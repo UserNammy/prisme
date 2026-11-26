@@ -118,6 +118,13 @@ passer par `ui/RailTitles.kt` (`displayRailTitle`).
 
 ## Décisions déjà prises
 
+- `minSdk = 26` (Android 8.0) : beaucoup de TV encore en service (TCL, Philips,
+  Sony 2018-2020) sont en Android 8 ou 9, et 8.0 est le minimum pour que la mise à
+  jour intégrée installe un APK. Ne pas remonter sans raison ; lancer `lintRelease`
+  (règle `NewApi`) après tout appel à une API récente. Testé sur émulateur Android TV 9
+  (installation, accueil, import, lecture HLS) ; ses WebView ne s'affichent pas en
+  émulateur (`eglChooseConfig failed`), YouTube et pages restent à vérifier sur une
+  vraie TV Android 9.
 - La largeur inférieure à `600dp` utilise `MobileHomeScreen` ; les grands écrans
   gardent `ChannelsScreen`, optimisé télécommande.
 - `MainActivity` n’est pas verrouillée en paysage afin que l’accueil fonctionne
