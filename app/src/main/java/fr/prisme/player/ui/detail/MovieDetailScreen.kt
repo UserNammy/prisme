@@ -67,6 +67,7 @@ import coil.compose.AsyncImage
 import fr.prisme.player.R
 import fr.prisme.player.data.Channel
 import fr.prisme.player.ui.theme.PrismPalette
+import fr.prisme.player.ui.theme.multiplyAlpha
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -236,7 +237,7 @@ internal fun DetailActionButton(
     Button(
         onClick = onClick,
         colors = androidx.tv.material3.ButtonDefaults.colors(
-            containerColor = PrismPalette.SurfaceElevated.copy(alpha = 0.7f),
+            containerColor = PrismPalette.SurfaceElevated.multiplyAlpha(0.7f),
             contentColor = PrismPalette.TextPrimary,
             focusedContainerColor = PrismPalette.TextPrimary,
             focusedContentColor = PrismPalette.BackgroundDeep,

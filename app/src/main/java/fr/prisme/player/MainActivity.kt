@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -55,11 +56,20 @@ import fr.prisme.player.ui.splash.SplashScreen
 import fr.prisme.player.ui.theme.PrismTheme
 import fr.prisme.player.ui.theme.PrismBackground
 import fr.prisme.player.ui.wizard.WelcomeScreen
+import fr.prisme.player.ui.feedback.UiSoundEffects
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Hands the platform launch window back to our normal app theme. AndroidX requires
+        // this before super.onCreate(); it also stops Android 12+ from stretching the old
+        // launcher icon as a transient splash screen.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+        // The emulator's launcher uses a translucent system bar. Keep the short platform
+        // splash visually self-contained instead of allowing that wallpaper to peek through.
+        window.statusBarColor = getColor(R.color.splash_background)
+        window.navigationBarColor = getColor(R.color.splash_background)
         setContent {
             PrismTheme {
                 PrismBackground {
@@ -110,6 +120,9 @@ class MainActivity : ComponentActivity() {
      * is addressed in later alphas), but that needs a Compose BOM bump and broader testing.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean = try {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            UiSoundEffects.playForRemoteKey(this, event.keyCode, event.repeatCount)
+        }
         super.dispatchKeyEvent(event)
     } catch (e: IllegalStateException) {
         if (e.message?.contains("isAttached", ignoreCase = true) == true) {

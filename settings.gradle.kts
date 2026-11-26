@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Prism"
 include(":app")
+include(":baselineprofile")

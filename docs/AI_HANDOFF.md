@@ -33,9 +33,15 @@ Dernier jalon : passe de nommage (Prism, `fr.prisme.player`, français par défa
 
 Fonctionnel dans la base existante :
 
-- sources M3U/M3U8 et Xtream ;
+- sources M3U/M3U8 (adresse web ou fichier envoyé depuis le téléphone, gardé dans
+  le stockage privé de l’appli : `LocalPlaylist`) et Xtream ;
 - cache Room local, rafraîchissement manuel et planifié ;
 - lecture Media3 / ExoPlayer (HLS, DASH, TS), pistes audio et sous-titres ;
+- entrées YouTube et pages web (`player/WebChannel.kt`, `WebChannelLayer.kt`) :
+  YouTube via le lecteur IFrame officiel (origine `https://<package>` exigée par
+  YouTube depuis 2025), pages en WebView plein écran ; une adresse qu'ExoPlayer ne
+  reconnaît pas comme média (HTML) bascule automatiquement en page. Ne jamais
+  extraire le flux brut de YouTube ;
 - EPG XMLTV lorsque la source le fournit ;
 - films, séries, reprise de lecture, favoris, profils et code PIN ;
 - page de configuration TV accessible par QR depuis un téléphone sur le même
@@ -93,6 +99,17 @@ app/src/main/java/fr/prisme/player/
 Le package Kotlin, le `namespace` Gradle et l’`applicationId` sont tous
 `fr.prisme.player` (migration depuis `nl.vanvrouwerff.iptv` faite). Le nom affiché
 est **Prism** partout ; « prisme » ne subsiste que dans l’identifiant technique.
+
+Décision du 25 novembre 2026 : on garde **Prism** (sans E) comme nom affiché, car
+le logo, la bannière TV et la planche DA sont dessinés autour de ce nom. Ne pas
+« corriger » vers Prisme. Aucun appareil n’a encore Prism installé à cette date,
+mais dès la première installation il ne faudra jamais renommer :
+
+- l’`applicationId` `fr.prisme.player` : Android y verrait une autre appli, les
+  appareils installés ne recevraient plus les mises à jour et il faudrait tout
+  reconfigurer ;
+- le dépôt GitHub `UserNammy/prisme` : la mise à jour intégrée y cherche les
+  versions (`UPDATE_REPO`).
 
 Le français est la langue par défaut (`values/strings.xml`), il n’y a plus de
 ressources néerlandaises. Les titres de rangées internes (`ChannelsUiState.CONTINUE_WATCHING`,
@@ -175,6 +192,11 @@ compile l’APK release à chaque push ; l’APK est téléchargeable dans l’o
 Actions. Un tag `v*` publie en plus une release (signée, voir `docs/RELEASE.md`).
 Ne pas affirmer qu’un changement compile sans une CI verte ou une compilation
 locale réussie :
+
+Le checkout principal est placé dans OneDrive : la synchronisation peut
+verrouiller `app/build` et provoquer une erreur Gradle du type « Unable to delete
+directory ». Dans ce cas, faire la vérification dans une copie ou un worktree
+hors d’un dossier synchronisé plutôt que de supprimer des fichiers source.
 
 ```powershell
 .\gradlew.bat test --no-daemon --console=plain

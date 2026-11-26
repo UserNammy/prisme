@@ -269,6 +269,11 @@ private fun SourceSection(
             selected = state.type == SourceType.Xtream,
             onClick = { vm.setType(SourceType.Xtream) },
         )
+        SegmentPill(
+            label = stringResource(R.string.settings_source_file),
+            selected = state.type == SourceType.LocalFile,
+            onClick = { vm.setType(SourceType.LocalFile) },
+        )
     }
     if (state.filledFromPhone) {
         Text(
@@ -285,6 +290,29 @@ private fun SourceSection(
             singleLine = true,
             modifier = Modifier.widthIn(max = 720.dp).fillMaxWidth(),
         )
+        SourceType.LocalFile -> Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.widthIn(max = 720.dp),
+        ) {
+            Text(
+                text = state.localFileName?.let { stringResource(R.string.settings_local_file_current, it) }
+                    ?: stringResource(R.string.settings_local_file_none),
+                style = MaterialTheme.typography.titleMedium,
+                color = PrismPalette.TextPrimary,
+            )
+            state.localFileJustImported?.let {
+                Text(
+                    text = stringResource(R.string.settings_local_file_received, it),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PrismPalette.AccentSoft,
+                )
+            }
+            Text(
+                text = stringResource(R.string.settings_local_file_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = PrismPalette.TextSecondary,
+            )
+        }
         SourceType.Xtream -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
                 value = state.host,

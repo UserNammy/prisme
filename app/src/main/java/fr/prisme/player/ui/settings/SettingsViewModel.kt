@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.filterNotNull
+import fr.prisme.player.data.settings.LocalPlaylist
 import fr.prisme.player.data.settings.SourceTester
 import fr.prisme.player.data.settings.SourceTestResult
 import fr.prisme.player.data.settings.PhoneSetupServer
@@ -19,7 +20,7 @@ import fr.prisme.player.R
 import fr.prisme.player.data.settings.SourceConfig
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
-enum class SourceType { M3u, Xtream }
+enum class SourceType { M3u, Xtream, LocalFile }
 
 data class SettingsUiState(
     val type: SourceType = SourceType.M3u,
@@ -47,6 +48,10 @@ data class SettingsUiState(
     val testResult: SourceTestResult? = null,
     /** Set when a phone just sent the form, so the screen can say so. */
     val filledFromPhone: Boolean = false,
+    /** Name of the playlist file imported from the phone, when one is stored on the TV. */
+    val localFileName: String? = null,
+    /** Channel count of a file received during this visit to the settings screen. */
+    val localFileJustImported: Int? = null,
 )
 
 /** Language choices offered for audio and subtitles, as ISO 639-1 codes ("" = no preference). */
@@ -68,8 +73,14 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             val current = app.settings.sourceConfig.first()
             initialSource = current
+            val storedFile = LocalPlaylist.exists()
+            if (storedFile) {
+                val name = app.settings.localPlaylistName.first() ?: "playlist.m3u"
+                _state.update { it.copy(localFileName = name) }
+            }
             when (current) {
                 is SourceConfig.M3u -> _state.update { it.copy(type = SourceType.M3u, m3uUrl = current.url) }
+                is SourceConfig.LocalM3u -> _state.update { it.copy(type = SourceType.LocalFile) }
                 is SourceConfig.Xtream -> _state.update {
                     it.copy(
                         type = SourceType.Xtream,
@@ -100,6 +111,23 @@ class SettingsViewModel : ViewModel() {
             PhoneSetupServer.submission
                 .filterNotNull()
                 .onEach { applyPhoneSubmission(it) }
+                .launchIn(viewModelScope)
+            // The server already saved the file as the source and started the refresh.
+            PhoneSetupServer.playlistImported
+                .filterNotNull()
+                .onEach { imported ->
+                    initialSource = SourceConfig.LocalM3u(imported.fileName)
+                    _state.update {
+                        it.copy(
+                            type = SourceType.LocalFile,
+                            localFileName = imported.fileName,
+                            localFileJustImported = imported.channelCount,
+                            validationError = null,
+                            testResult = null,
+                            filledFromPhone = false,
+                        )
+                    }
+                }
                 .launchIn(viewModelScope)
         }
         app.refreshUseCase.refreshing
@@ -148,6 +176,11 @@ class SettingsViewModel : ViewModel() {
                 val host = normaliseUrl(s.host) ?: run { fail(R.string.settings_invalid_host); return null }
                 if (s.username.isBlank()) { fail(R.string.settings_invalid_user); return null }
                 SourceConfig.Xtream(host.trimEnd('/'), s.username.trim(), s.password)
+            }
+            SourceType.LocalFile -> {
+                val name = s.localFileName
+                if (name == null || !LocalPlaylist.exists()) { fail(R.string.settings_local_file_missing); return null }
+                SourceConfig.LocalM3u(name)
             }
         }
     }
@@ -214,6 +247,7 @@ class SettingsViewModel : ViewModel() {
             _state.update { it.copy(saving = true, validationError = null) }
             when (newSource) {
                 is SourceConfig.M3u -> app.settings.saveM3u(newSource.url)
+                is SourceConfig.LocalM3u -> app.settings.saveLocalM3u(newSource.fileName)
                 is SourceConfig.Xtream ->
                     app.settings.saveXtream(newSource.host, newSource.username, newSource.password)
             }

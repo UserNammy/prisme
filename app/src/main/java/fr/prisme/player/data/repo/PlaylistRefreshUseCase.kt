@@ -15,6 +15,7 @@ import fr.prisme.player.data.db.ChannelDao
 import fr.prisme.player.data.db.toEntity
 import fr.prisme.player.data.remote.HttpClient
 import fr.prisme.player.data.settings.SettingsStore
+import fr.prisme.player.data.settings.LocalPlaylist
 import fr.prisme.player.data.settings.SourceConfig
 import fr.prisme.player.data.xtream.CategoryFilter
 
@@ -112,6 +113,7 @@ class PlaylistRefreshUseCase(
         when (val config = settings.sourceConfig.first()) {
             null -> null
             is SourceConfig.M3u -> M3uPlaylistRepository(config.url, HttpClient.okHttp)
+            is SourceConfig.LocalM3u -> LocalM3uPlaylistRepository(LocalPlaylist.file())
             is SourceConfig.Xtream -> XtreamPlaylistRepository(
                 config.host,
                 config.username,
@@ -121,7 +123,7 @@ class PlaylistRefreshUseCase(
         }
 
     private suspend fun refresh(force: Boolean, onCatalogueReady: () -> Unit) {
-        val repo = repository() ?: error("Aucune source configurée.")
+        val repo = repository() ?: error("Aucune source n’est configurée.")
 
         val etag = if (force) null else settings.playlistEtag.first()
         val lastMod = if (force) null else settings.playlistLastModified.first()

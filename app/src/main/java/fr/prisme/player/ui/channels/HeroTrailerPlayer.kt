@@ -57,17 +57,19 @@ fun HeroTrailerPlayer(
                 .rel(0)
                 .ivLoadPolicy(3)
                 .ccLoadPolicy(0)
+                // Same origin rule as full-screen YouTube channels (see WebChannelLayer).
+                .origin("https://${ctx.packageName}")
                 .build()
             YouTubePlayerView(ctx).apply {
                 enableAutomaticInitialization = false
                 lifecycleOwner.lifecycle.addObserver(this)
                 initialize(object : AbstractYouTubePlayerListener() {
-                    override fun onReady(player: YouTubePlayer) {
+                    override fun onReady(youTubePlayer: YouTubePlayer) {
                         runCatching {
-                            player.setVolume(0)
-                            player.loadVideo(youtubeKey, 0f)
+                            youTubePlayer.setVolume(0)
+                            youTubePlayer.loadVideo(youtubeKey, 0f)
                         }.onFailure { onError() }
-                        ytPlayer = player
+                        ytPlayer = youTubePlayer
                     }
 
                     override fun onError(

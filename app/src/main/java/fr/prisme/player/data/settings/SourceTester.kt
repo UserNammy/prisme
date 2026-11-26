@@ -36,6 +36,7 @@ object SourceTester {
             when (source) {
                 is SourceConfig.Xtream -> testXtream(source)
                 is SourceConfig.M3u -> testM3u(source)
+                is SourceConfig.LocalM3u -> testLocal()
             }
         } catch (e: UnknownHostException) {
             SourceTestResult.Failed(SourceTestResult.Reason.HostUnreachable, e.message)
@@ -85,6 +86,18 @@ object SourceTester {
             live = count("get_live_streams", "\"stream_id\""),
             movies = count("get_vod_streams", "\"stream_id\""),
             series = count("get_series", "\"series_id\""),
+        )
+    }
+
+    private fun testLocal(): SourceTestResult {
+        val text = LocalPlaylist.readText()
+            ?: return SourceTestResult.Failed(SourceTestResult.Reason.Other, "aucun fichier importé")
+        val channels = runCatching { LocalPlaylist.parse(text) }.getOrNull()
+            ?: return SourceTestResult.Failed(SourceTestResult.Reason.NotAPlaylist)
+        return SourceTestResult.Ok(
+            live = channels.count { it.type == ContentType.TV },
+            movies = channels.count { it.type == ContentType.MOVIE },
+            series = channels.count { it.type == ContentType.SERIES },
         )
     }
 
