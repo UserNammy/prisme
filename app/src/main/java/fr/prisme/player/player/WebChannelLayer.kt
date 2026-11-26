@@ -55,6 +55,8 @@ class WebChannelController {
     internal var youTube: YouTubePlayer? = null
     internal var youTubeSecond = 0f
     internal var youTubePlaying = false
+    /** True once the video really started; "ready" alone also fires on a broken WebView. */
+    internal var youTubeStarted = false
     internal var leaveFullscreen: (() -> Unit)? = null
 
     /** Leaves a page's video fullscreen, then steps back in its history; false if neither. */
@@ -165,10 +167,13 @@ private fun YouTubeChannel(
                     override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
                         controller.youTubePlaying = state == PlayerConstants.PlayerState.PLAYING ||
                             state == PlayerConstants.PlayerState.BUFFERING
+                        // Only real playback counts: a broken player still reports "buffering".
+                        if (state == PlayerConstants.PlayerState.PLAYING) controller.youTubeStarted = true
                     }
 
                     override fun onCurrentSecond(youTubePlayer: YouTubePlayer, second: Float) {
                         controller.youTubeSecond = second
+                        if (second > 0f) controller.youTubeStarted = true
                     }
 
                     override fun onError(youTubePlayer: YouTubePlayer, error: PlayerConstants.PlayerError) {
@@ -190,10 +195,22 @@ private fun YouTubeChannel(
         },
     )
 
+    // An outdated system WebView (Android 8/9 TVs that never update it) cannot run
+    // YouTube's player script: nothing loads and no error is reported. Say so instead of
+    // leaving a black screen.
+    LaunchedEffect(videoId) {
+        delay(YOUTUBE_START_TIMEOUT_MS)
+        if (!controller.youTubeStarted) {
+            val webView = runCatching { WebView.getCurrentWebViewPackage()?.versionName }.getOrNull() ?: "?"
+            onError(context.getString(R.string.web_youtube_webview_outdated, webView))
+        }
+    }
+
     DisposableEffect(videoId) {
         onDispose {
             controller.youTube = null
             controller.youTubePlaying = false
+            controller.youTubeStarted = false
             controller.youTubeSecond = 0f
             view?.let {
                 lifecycleOwner.lifecycle.removeObserver(it)
@@ -292,3 +309,4 @@ private fun PageChannel(url: String, controller: WebChannelController) {
 }
 
 private const val HINT_DURATION_MS = 6_000L
+private const val YOUTUBE_START_TIMEOUT_MS = 15_000L

@@ -20,7 +20,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.focusGroup
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -77,7 +83,10 @@ fun UpdateHost() {
     }
 }
 
-@OptIn(ExperimentalTvMaterial3Api::class)
+private const val FOCUS_ATTEMPTS = 10
+private const val FOCUS_RETRY_MS = 300L
+
+@OptIn(ExperimentalTvMaterial3Api::class, androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 private fun UpdateCard(
     title: String,
@@ -88,8 +97,17 @@ private fun UpdateCard(
     onSecondary: () -> Unit = {},
 ) {
     val focus = remember { FocusRequester() }
+    var cardHasFocus by remember { mutableStateOf(false) }
     if (primary != null) {
-        LaunchedEffect(title) { runCatching { focus.requestFocus() } }
+        // The screen underneath (home, wizard) grabs focus when it finishes loading, often
+        // after this card appeared: take it back until the card holds it, or the remote
+        // can never reach its buttons.
+        LaunchedEffect(title) {
+            repeat(FOCUS_ATTEMPTS) {
+                if (!cardHasFocus) runCatching { focus.requestFocus() }
+                delay(FOCUS_RETRY_MS)
+            }
+        }
         BackHandler(onBack = if (secondary != null) onSecondary else onPrimary)
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
@@ -97,8 +115,13 @@ private fun UpdateCard(
             modifier = Modifier
                 .padding(40.dp)
                 .width(460.dp)
-                .background(PrismPalette.SurfaceElevated, RoundedCornerShape(18.dp))
-                .padding(22.dp),
+                // Opaque: a translucent veil let the tiles behind show through the text.
+                .background(PrismPalette.SurfaceControl, RoundedCornerShape(18.dp))
+                .padding(22.dp)
+                .onFocusChanged { cardHasFocus = it.hasFocus }
+                // While it is up, the D-pad stays on its buttons instead of the screen behind.
+                .focusProperties { exit = { FocusRequester.Cancel } }
+                .focusGroup(),
         ) {
             Text(
                 text = title,
